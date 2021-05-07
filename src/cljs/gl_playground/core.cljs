@@ -12,20 +12,20 @@
 
 (def layout
   {:global {}
-   :layout {:type     "row"
+   :layout {:type     :row
             :weight   100
             :children [
-                       {:type     "tabset"
+                       {:type     :tabset
                         :weight   50
                         :selected 0
-                        :children [{:type      "tab"
+                        :children [{:type      :tab
                                     :name      "A Button"
                                     :component "button"
                                     :config    {:label "Submit!"}}]}
-                       {:type     "tabset"
+                       {:type     :tabset
                         :weight   50
                         :selected 0
-                        :children [{:type      "tab"
+                        :children [{:type      :tab
                                     :name      "Simple Form"
                                     :component "form"
                                     :config    {:text "some text"}}]}]}})
