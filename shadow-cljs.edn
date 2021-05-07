@@ -1,0 +1,15 @@
+;; shadow-cljs configuration
+{:source-paths ["src/cljs" "src/test"]
+
+ :dependencies [[reagent "1.0.0"]
+                [com.taoensso/timbre "5.1.2"]]
+
+ :dev-http     {8081 "public"}
+
+ :nrepl        {:port 5555}
+
+ :builds       {:app {:target     :browser
+                      :output-dir "public/scripts/"
+                      :asset-path "/scripts/"
+                      :compiler-options {:output-feature-set :es7}
+                      :modules    {:core {:init-fn gl-playground.core/main}}}}}

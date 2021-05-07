@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "flexlayout-react": "^0.5.6",
+    "golden-layout": "^2.1.2",
+    "jquery": "^3.6.0",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "react-golden-layout": "^1.0.6",
+    "tslib": "^2.2.0"
+  }
+}
