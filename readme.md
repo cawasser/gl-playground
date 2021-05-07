@@ -62,20 +62,20 @@ Further development by our team added more complications and ["complecting"](htt
 
 So what do we like about how things are done currently, at least from a UI/UX perspective?
 
-1. Pushing data from the server, using websockets
-2. Draggable screen organization (grids, etc)
-3. User ability to pick the data first, then the visualization technique
-4. Meta-data tagging on data sent by the server
-5. Meta-data tagging on widgets, documenting the kinds of data they can "easily" present
-6. Meta-data tags can be used to support data->visualization conversions
-7. Complex and visually pleasing charts and diagrams, including Sankey diagrams
-8. Preserving screen layout per user (personalization) at the Server
+[ ] Pushing data from the server, using websockets
+[ ] Draggable screen organization (grids, etc)
+[ ] User ability to pick the data first, then the visualization technique
+[ ] Meta-data tagging on data sent by the server
+[ ] Meta-data tagging on widgets, documenting the kinds of data they can "easily" present
+[ ] Meta-data tags can be used to support data->visualization conversions
+[ ] Complex and visually pleasing charts and diagrams, including Sankey diagrams
+[ ] Preserving screen layout per user (personalization) at the Server
 
 ## Improvements we'd like to see
 
-1. True "event-driven" updates from the Server
-2. Support for query-driven updates as well
-3. Move to a true OSS graphics library, like [oz](https://github.com/metasoarous/oz)
-4. User-buildable widgets (grid content), akin to Bret Victor's [Drawing Dynamic Visualizations](http://worrydream.com/#!/DrawingDynamicVisualizationsTalk)
-5. Inter-widget communications/sharing (of selections, configuration, etc)
+[ ] True "event-driven" updates from the Server
+[ ] Support for query-driven updates as well
+[ ] Move to a true OSS graphics library, like [oz](https://github.com/metasoarous/oz)
+[ ] User-buildable widgets (grid content), akin to Bret Victor's [Drawing Dynamic Visualizations](http://worrydream.com/#!/DrawingDynamicVisualizationsTalk)
+[ ] Inter-widget communications/sharing (of selections, configuration, etc)
 
