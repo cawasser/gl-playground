@@ -43,13 +43,13 @@ We are starting to see signs of cracks in the underpinnings of the
 ## What's wrong?
 
 The original Vanilla project was built from [dashboard-clj](https://github.com/multunus/dashboard-clj), which was a very
-"batteries included" example of building "dashboard" and "dashboard-like" Single-Page Applications. But, it also burdened
+"batteries included" example of building "dashboard" and "dashboard-like" Single-Page Applications. But, it also burdens
 the developer with a number of explicit and implicit couplings:
 
 1. Interactions between the server and the client were scheduled, using [org.immutant/scheduling](http://immutant.org/documentation/current/apidoc/guide-scheduling.html), not "event-driven" as data changed
-2. It was from 2016, so it predated shadow-cljs, using [cljsjs](http://cljsjs.github.io) to use React Javascript components.
+2. The project is from 2016, so it predated shadow-cljs, using [cljsjs](http://cljsjs.github.io) to use React Javascript components.
 3. It was built using Leiningen.
-4. Only provided examples using [Highcharts](http://www.highcharts.com), which is itself very complex (and "sort-of" but not "exactly" [GG](https://ggplot2.tidyverse.org))
+4. It only provided examples using [Highcharts](http://www.highcharts.com), which is itself very complex (and "sort-of" but not "exactly" [GG](https://ggplot2.tidyverse.org))
 5. Highcharts is difficult to work with from CLJS, and incurs licensing fees.
 6. Screen management is restricted to a single browser tab on a single screen by [react-grid-layout](https://github.com/react-grid-layout/react-grid-layout)
 
@@ -57,6 +57,7 @@ Further development by our team added more complications and ["complecting"](htt
 
 1. UI Widget construction spans many namespaces and is difficult to understand, debug, and extend
 2. Data subscriptions from the server often break [re-frame](https://github.com/Day8/re-frame) re-draw containership, causing "over refresh" of the UI
+3. Registering the different types of widgets (highcharts-based, non-highcharts, etc.) are all special cases
 
 ## What's worth keeping?
 
@@ -76,6 +77,6 @@ So what do we like about how things are done currently, at least from a UI/UX pe
 [ ] True "event-driven" updates from the Server
 [ ] Support for query-driven updates as well
 [ ] Move to a true OSS graphics library, like [oz](https://github.com/metasoarous/oz)
-[ ] User-buildable widgets (grid content), akin to Bret Victor's [Drawing Dynamic Visualizations](http://worrydream.com/#!/DrawingDynamicVisualizationsTalk)
+[ ] User-buildable widgets (content), akin to Bret Victor's [Drawing Dynamic Visualizations](http://worrydream.com/#!/DrawingDynamicVisualizationsTalk)
 [ ] Inter-widget communications/sharing (of selections, configuration, etc)
 
