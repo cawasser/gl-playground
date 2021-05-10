@@ -10,7 +10,7 @@ for use with [React](https://reactjs.org/) and we are using [Reagent](https://gi
 
 We are using [shadow-cljs](https://github.com/thheller/shadow-cljs)
 
-## Developing, testing and Debugging
+## Developing, Testing, and Debugging
 
 Clone the repo locally with:
 
@@ -43,7 +43,7 @@ We are starting to see signs of cracks in the underpinnings of the
 [Vanilla UI](https://github.com/cawasser/rocky-road/tree/master/bases/vanilla/cljs) in the
 [Rocky-Road](https://github.com/cawasser/rocky-road) project.
 
-## What's wrong?
+### What's wrong?
 
 The original Vanilla project was built from [dashboard-clj](https://github.com/multunus/dashboard-clj), which was a very
 "batteries included" example of building "dashboard" and "dashboard-like" Single-Page Applications. But, it also burdens
