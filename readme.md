@@ -66,21 +66,21 @@ Further development by our team added more complications and ["complecting"](htt
 
 So what do we like about how things are done currently, at least from a UI/UX perspective?
 
-[ ] Pushing data from the server, using websockets and "subscriptions"
-[ ] Draggable screen organization (grids, etc)
-[ ] User ability to pick the data first from what is available, then the visualization technique
-[ ] Meta-data tagging on data sent by the server, documenting the structure of the data provided
-[ ] Meta-data tagging on the widgets, documenting the kinds of data they can "easily" present
-[ ] Meta-data tags can be used to support data->visualization conversions
-[ ] Complex and visually pleasing charts and diagrams, including Sankey diagrams
-[ ] Preserving screen layout per user (personalization) at the Server
+- [ ] Pushing data from the server, using websockets and "subscriptions"
+- [ ] Draggable screen organization (grids, etc)
+- [ ] User ability to pick the data first from what is available, then the visualization technique
+- [ ] Meta-data tagging on data sent by the server, documenting the structure of the data provided
+- [ ] Meta-data tagging on the widgets, documenting the kinds of data they can "easily" present
+- [ ] Meta-data tags can be used to support data->visualization conversions
+- [ ] Complex and visually pleasing charts and diagrams, including Sankey diagrams
+- [ ] Preserving screen layout per user (personalization) at the Server
 
 ## Improvements we'd like to make
 
-[ ] True "event-driven" updates from the Server (as the default)
-[ ] Support for query-driven updates as well
-[ ] Move to a true OSS graphics library, like [oz](https://github.com/metasoarous/oz)
-[ ] User-buildable widgets (content), akin to Bret Victor's [Drawing Dynamic Visualizations](http://worrydream.com/#!/DrawingDynamicVisualizationsTalk)
-[ ] Inter-widget communications/sharing (of selections, configuration, etc)
-[ ] Support for all manner of React-based widget types, including Geo ([WorldWind](https://worldwind.arc.nasa.gov)/[Cesium](https://cesium.com/platform/cesiumjs/)), 3D ([three.js](https://threejs.org)), and others
+- [ ] True "event-driven" updates from the Server (as the default)
+- [ ] Support for query-driven updates as well
+- [ ] Move to a true OSS graphics library, like [oz](https://github.com/metasoarous/oz)
+- [ ] User-buildable widgets (content), akin to Bret Victor's [Drawing Dynamic Visualizations](http://worrydream.com/#!/DrawingDynamicVisualizationsTalk)
+- [ ] Inter-widget communications/sharing (of selections, configuration, etc)
+- [ ] Support for all manner of React-based widget types, including Geo ([WorldWind](https://worldwind.arc.nasa.gov)/[Cesium](https://cesium.com/platform/cesiumjs/)), 3D ([three.js](https://threejs.org)), and others
 
