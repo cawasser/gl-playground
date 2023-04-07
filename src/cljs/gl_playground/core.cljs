@@ -4,7 +4,6 @@
     [reagent.dom :as rd]
     [cljs.tools.reader.edn :as edn]
     [taoensso.timbre :as log]
-    ;["flexlayout-react" :refer (Layout Model) :default FlexLayout]
     [gl-playground.widget.registry :as wr]
     [gl-playground.widget.just-a-button]
     [gl-playground.widget.simple-form]
@@ -37,37 +36,21 @@
                    {:id "200", :position {:x 0, :y 100}, :data {:label "2"}}])
 
 (def initialEdges [{:id "e1-2", :source "100", :target "200"}])
-
-
-
-
-
-;(defn component-factory [node]
-;  (log/info "component-factory " node)
-;  (let [component (.getComponent node)
-;        name      (.getName node)
-;        config    (.getConfig node)]
-;    (log/info "component-factory " component name config)
-;    (r/as-element ((wr/widget-for component) name config))))
-
-
-
-;(defn- flex []
-;  (log/info "flex")
-;  [:> Layout {:model   (.fromJson Model (clj->js layout))
-;              :factory component-factory}])
-
-
-
-
+(defn box [id]
+  [:div.box
+   {:id id
+    :draggable true
+    :onDragStart drag-start
+    :onDragOver drag-over
+    :onDrop drop}
+   id])
 
 (defn page []
-  [:div {:style {:width "100vw" :height "100vh"}}
-   [diagram/component
+  [:div {:style {:width "800vw" :height "800vh"}}
+   [diagram/make-draggable-node "test"]
+   [:f> diagram/editable-diagram
     :nodes initialNodes :edges initialEdges
     :controls true :mini-map true :background true]])
-
-
 
 (defn ^:dev/after-load-async mount-components
   "mount the main UI components using Reagent"
@@ -75,13 +58,6 @@
   (let [root-el (.getElementById js/document "app")]
     (rd/unmount-component-at-node root-el)
     (rd/render [page] root-el)))
-
-
-
-
-
-
-
 
 (defn main []
   (log/info "running!")
