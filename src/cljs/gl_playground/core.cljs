@@ -34,16 +34,8 @@
 
 (def initialNodes [{:id "100", :position {:x 0, :y 0}, :data {:label "1"}},
                    {:id "200", :position {:x 0, :y 100}, :data {:label "2"}}])
-
 (def initialEdges [{:id "e1-2", :source "100", :target "200"}])
-(defn box [id]
-  [:div.box
-   {:id id
-    :draggable true
-    :onDragStart drag-start
-    :onDragOver drag-over
-    :onDrop drop}
-   id])
+
 
 (defn page []
   [:div {:style {:width "800vw" :height "800vh"}}
@@ -52,12 +44,14 @@
     :nodes initialNodes :edges initialEdges
     :controls true :mini-map true :background true]])
 
+
 (defn ^:dev/after-load-async mount-components
   "mount the main UI components using Reagent"
   []
   (let [root-el (.getElementById js/document "app")]
     (rd/unmount-component-at-node root-el)
     (rd/render [page] root-el)))
+
 
 (defn main []
   (log/info "running!")
