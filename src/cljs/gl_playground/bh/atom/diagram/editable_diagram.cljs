@@ -63,14 +63,15 @@
 
 
 (defn on-connect [event]
-  (log/info event)
+  (log/info "on-connect" (js->clj event :keywordize-keys true))
+
   (let [event-map (js->clj event :keywordize-keys true)
         source-id (get-in event-map [:source :id])
         target-id (get-in event-map [:target :id])
         edge      {:id     (str source-id "->" target-id)
                    :source source-id
-                   :target target-id}]
-    (applyEdgeChanges (clj->js [edge]))))
+                   :target target-id}]))
+    ;(applyEdgeChanges (clj->js [edge]))))
 
 
 (defn- diagram* [{:keys [nodes edges
@@ -85,7 +86,7 @@
                  :onInit        (fn [r] (reset! flowInstance r) (log/info @flowInstance))
                  :onDrop        (partial on-drop flowInstance set-nodes wrapper)
                  :onDragOver    (or on-drag-over #())
-                 :onConnect     on-connect}
+                 :onConnect     (partial on-connect)}
    [:> Controls]
    [:> MiniMap]
    [:> Background]])
