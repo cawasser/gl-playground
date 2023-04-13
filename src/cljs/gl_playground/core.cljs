@@ -2,6 +2,7 @@
   (:require
     [reagent.core :as r]
     [reagent.dom :as rd]
+    [re-frame.core :as rf]
     [cljs.tools.reader.edn :as edn]
     [taoensso.timbre :as log]
     [gl-playground.widget.registry :as wr]
@@ -35,13 +36,14 @@
 (def initialNodes [{:id "100", :position {:x 0, :y 0}, :data {:label "1"}},
                    {:id "200", :position {:x 0, :y 100}, :data {:label "2"}}])
 (def initialEdges [{:id "e1-2", :source "100", :target "200"}])
+(defonce data (r/atom {:nodes initialNodes :edges initialEdges}))
 
 
 (defn page []
   [:div {:style {:width "800vw" :height "800vh"}}
    [diagram/make-draggable-node "test"]
    [:f> diagram/editable-diagram
-    :nodes initialNodes :edges initialEdges
+    :data data
     :controls true :mini-map true :background true]])
 
 
@@ -81,7 +83,16 @@
     pr-str
     edn/read-string)
   (js->clj {"text" "some text"})
-
   ())
 
 
+(comment
+
+  @data
+
+  (-> @data :nodes count)
+  (-> @data :edges count)
+
+  @re-frame.db/app-db
+
+  ())
