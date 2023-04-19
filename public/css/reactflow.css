@@ -392,3 +392,19 @@
   border-bottom-width: 1px;
   top: 100%;
 }
+
+.react-flow__node-color-picker {
+  font-size: 12px;
+  background: #eee;
+  border: 1px solid #555;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.react-flow__node-editable-node {
+  font-size: 12px;
+  background: #eee;
+  border: 1px solid #555;
+  border-radius: 5px;
+  text-align: center;
+}

@@ -4,11 +4,15 @@
     [reagent.dom :as rd]
     [re-frame.core :as rf]
     [cljs.tools.reader.edn :as edn]
+    ["reactflow" :refer (ReactFlowProvider
+                          Handle Position)]
     [taoensso.timbre :as log]
     [gl-playground.widget.registry :as wr]
     [gl-playground.widget.just-a-button]
     [gl-playground.widget.simple-form]
-    [gl-playground.bh.atom.diagram.editable-diagram :as diagram]))
+    [gl-playground.bh.atom.diagram.editable-diagram :as diagram]
+    ;[gl-playground.bh.atom.diagram.CustomNodes.EditableNode :as EditableNode]
+    ))
 
 
 (def layout
@@ -31,20 +35,35 @@
                                     :component "form"
                                     :config    {:text "some text"}}]}]}})
 
+(defn editableNode []
+  [:<>
+   ;[Handle {:type "target"
+   ;            :isConnectable true}]
+   ;[:input {:type "text"}]
+   ;[Handle {:type "source"
+   ;            :isConnectable true}]
+   ]
+  )
 
 
-(def initialNodes [{:id "100", :position {:x 0, :y 0}, :data {:label "1"}},
-                   {:id "200", :position {:x 0, :y 100}, :data {:label "2"}}])
+(def initialNodes [{:id "100", :position {:x 100, :y 100}, :data {:label "1"}}
+                   {:id "200", :position {:x 100, :y 200}, :data {:label "2"}}])
 (def initialEdges [{:id "e1-2", :source "100", :target "200"}])
 (defonce data (r/atom {:nodes initialNodes :edges initialEdges}))
 
 
+
 (defn page []
-  [:div {:style {:width "800vw" :height "800vh"}}
-   [diagram/make-draggable-node "test"]
+  (let [text-value (r/atom "Type Here")]
+    [:div {:style {:width "800vw" :height "800vh"}}
+  ;[:form {:className "nodrag"}
+  ; [:input.input {:type "text" :value @text-value :on-click #(println "clicked") :on-change #(reset! text-value (-> % .-target .-value))}]]
+
+   [diagram/make-draggable-node "Editable Node" "editable-node"]
+   [diagram/make-draggable-node "Color Picker" "color-picker"]
    [:f> diagram/editable-diagram
     :data data
-    :controls true :mini-map true :background true]])
+    :controls true :mini-map true :background true]]))
 
 
 (defn ^:dev/after-load-async mount-components

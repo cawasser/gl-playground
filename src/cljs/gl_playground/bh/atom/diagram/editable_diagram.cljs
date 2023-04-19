@@ -8,14 +8,19 @@
                                   applyEdgeChanges
                                   useNodesState
                                   useEdgesState
-                                  useCallBack)]
-            [reagent.core :as r]))
+                                  useCallBack Handle Position)]
+            ["react" :as react]
+            [reagent.core :as r]
+            [gl-playground.bh.atom.diagram.custom-nodes.color-picker-node :as color-picker-node]
+            [gl-playground.bh.atom.diagram.custom-nodes.editable-node :as editable-node]
+            ))
 
 
 (defonce next-id (atom 0))
 
 
 (defn- on-drag-start [node-type event]
+  (print node-type)
   (.setData (.-dataTransfer event) "editable-flow" node-type)
   (set! (.-effectAllowed (.-dataTransfer event)) "move"))
 
@@ -34,13 +39,14 @@
         x               (.-clientX event)
         y               (.-clientY event)
         reactFlowBounds (.getBoundingClientRect @wrapper)]
+    (println node-type)
 
     (when (not= node-type "undefined")
       (let [new-id   (str "node-" (swap! next-id inc))
             position ((.-project @reactFlowInstance) (clj->js {:x (- x (.-left reactFlowBounds))
                                                                :y (- y (.-top reactFlowBounds))}))
             new-node {:id       new-id
-                      :type     "default"
+                      :type     node-type
                       :data     {:label   new-id
                                  :inputs  []
                                  :outputs []}
@@ -48,15 +54,19 @@
 
         ;add the new nodes to the original nodes data (an atom)...
         (swap! data assoc :nodes (conj (:nodes @data) new-node))
-
         ; and this updates the data internal to the React diagram component...
-        (set-nodes-fn (fn [nds] (.concat nds (clj->js new-node))))))))
+        (set-nodes-fn (fn [nds] (.concat nds (clj->js new-node))))))
+
+    (println @data)))
 
 
 [:div]
 
 
-(defn make-draggable-node [label]
+(defn make-draggable-node [label node-type]
+  (print "Node Type")
+  (print node-type)
+ ; (print label)
   ^{:key label}
   [:div.draggable
    {:style       {:width           "150px" :height "50px"
@@ -67,7 +77,7 @@
                   :cursor          :grab
                   :border-radius   "3px" :padding "2px"}
 
-    :onDragStart #(on-drag-start "default" %)
+    :onDragStart #(on-drag-start node-type % )
     :draggable   true} label])
 
 
@@ -88,7 +98,7 @@
     ; and this updates the data internal to the React diagram component..
     (set-edges-fn (fn [e] (.concat e (clj->js new-edge))))))
 
-
+(def node-types {"color-picker" (partial color-picker-node/color-picker-node {:color "#1A192B"} true) "editable-node" editable-node/editableNode})
 
 (defn- diagram* [{:keys [data
                          nodes edges
@@ -99,6 +109,7 @@
                  :edges         edges
                  :onNodesChange on-change-nodes
                  :onEdgesChange on-change-edges
+                 :nodeTypes node-types
                  :fitView       true
                  :onInit        (fn [r] (reset! flowInstance r))
                  :onDrop        (partial on-drop flowInstance data set-nodes wrapper)
