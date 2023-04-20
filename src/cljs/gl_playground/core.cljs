@@ -3,6 +3,7 @@
     [reagent.core :as r]
     [reagent.dom :as rd]
     [re-frame.core :as rf]
+    [re-com.core :as rc]
     [cljs.tools.reader.edn :as edn]
     ["reactflow" :refer (ReactFlowProvider
                           Handle Position)]
@@ -11,8 +12,9 @@
     [gl-playground.widget.just-a-button]
     [gl-playground.widget.simple-form]
     [gl-playground.bh.atom.diagram.editable-diagram :as diagram]
-    ;[gl-playground.bh.atom.diagram.CustomNodes.EditableNode :as EditableNode]
-    ))
+    [gl-playground.bh.atom.diagram.editable-diagram-rccst :as diagram-r]))
+;[gl-playground.bh.atom.diagram.CustomNodes.EditableNode :as EditableNode]
+
 
 
 (def layout
@@ -36,34 +38,44 @@
                                     :config    {:text "some text"}}]}]}})
 
 (defn editableNode []
-  [:<>
-   ;[Handle {:type "target"
-   ;            :isConnectable true}]
-   ;[:input {:type "text"}]
-   ;[Handle {:type "source"
-   ;            :isConnectable true}]
-   ]
-  )
+  [:<>])
+;[Handle {:type "target"
+;            :isConnectable true}]
+;[:input {:type "text"}]
+;[Handle {:type "source"
+;            :isConnectable true}]
+
+
 
 
 (def initialNodes [{:id "100", :position {:x 100, :y 100}, :data {:label "1"}}
                    {:id "200", :position {:x 100, :y 200}, :data {:label "2"}}])
-(def initialEdges [{:id "e1-2", :source "100", :target "200"}])
+(def initialEdges [{:id "e1-2", :source "100", :target "200"
+                    :style {:strokeWidth 1 :stroke :yellow}
+                    :arrowHeadType "arrowclosed"}])
 (defonce data (r/atom {:nodes initialNodes :edges initialEdges}))
 
 
 
 (defn page []
-  (let [text-value (r/atom "Type Here")]
+  (let [text-value    (r/atom "Type Here")
+        open-details? (r/atom {})]
     [:div {:style {:width "800vw" :height "800vh"}}
-  ;[:form {:className "nodrag"}
-  ; [:input.input {:type "text" :value @text-value :on-click #(println "clicked") :on-change #(reset! text-value (-> % .-target .-value))}]]
 
-   [diagram/make-draggable-node "Editable Node" "editable-node"]
-   [diagram/make-draggable-node "Color Picker" "color-picker"]
-   [:f> diagram/editable-diagram
-    :data data
-    :controls true :mini-map true :background true]]))
+     [rc/h-box
+      :gap "5px"
+      :children [[rc/v-box :gap "2px"
+                  :children [[diagram/make-draggable-node ":ui/component" ":ui/component" :ui/component]
+                             [diagram/make-draggable-node ":source/remote" ":source/remote" :source/remote]
+                             [diagram/make-draggable-node "Color Picker" "color-picker" :source/local]
+                             [diagram/make-draggable-node "Editable" "editable-node" :source/fn]]]
+                 [diagram-r/editable-diagram
+                  :data data
+                  :component-id "editable-diragram-rccst"
+                  :node-types diagram-r/node-types
+                  :controls true
+                  :mini-map true
+                  :background true]]]]))
 
 
 (defn ^:dev/after-load-async mount-components
