@@ -188,8 +188,8 @@
 
 (def node-types {":ui/component"  (partial cn/custom-node :ui/component)
                  ":source/remote" (partial cn/custom-node :source/remote)
-                 "color-picker" (partial cp-node/color-picker-node :source/local)
-                 "editable-node" (partial e-node/editableNode :source/fn)})
+                 "color-picker"   (partial cp-node/color-picker-node :source/local)
+                 "editable-node"  (partial e-node/editableNode :source/fn)})
 
 
 ;; region ; digraph drag-and-drop support
@@ -258,7 +258,7 @@
         new-edge  {:id     (str source-id "->" target-id)
                    :source source-id
                    :target target-id
-                   :style {:stroke :green :strokeWidth 2}}]
+                   :style  {:stroke :green :strokeWidth 2}}]
     ;(log/info "connecting" new-edge)
 
     ;add the new nodes to the original nodes data (an atom)...
@@ -301,12 +301,14 @@
                 [:p @open-details?]]]]])
 
 
-(defn- diagram* [& {:keys [component-id nodes edges
+(defn- diagram* [& {:keys [component-id
+                           data
+                           nodes edges
                            node-types edge-types
                            minimap-styles
                            flowInstance
-                           on-change-nodes on-change-edges on-drop on-drag-over
-                           zoom-on-scroll preventScrolling connectFn] :as params}]
+                           on-change-nodes on-change-edges onDrop on-drag-over
+                           zoom-on-scroll preventScrolling onConnect] :as params}]
 
   ;(log/info "flow-star (params)" params "// (edge-types)" edge-types)
 
@@ -316,69 +318,69 @@
                              :onEdgesChange       on-change-edges
                              :zoomOnScroll        (or zoom-on-scroll false)
                              :preventScrolling    (or preventScrolling false)
-                             :onConnect           (or connectFn #())
+                             :onConnect           (or onConnect #())
                              :fitView             true
                              :defaultViewport     {:x 0 :y 0 :zoom 1.5}
                              :attributionPosition "bottom-left"
-                             :onDrop              (or on-drop #())
+                             :onDrop              (or onDrop #())
                              :onDragOver          (or on-drag-over #())
-                             :onInit              (fn [generatedFlowInstance] (reset! flowInstance generatedFlowInstance))}
+                             :onInit              (fn [r] (reset! flowInstance r))}
                  (when node-types {:node-types node-types})
                  (when edge-types {:edge-types edge-types}))]
 
     ;(log/info "flow-star (local-params)" params)
 
-    [:> ReactFlowProvider
-     [:> ReactFlow params
-      [:> MiniMap (if minimap-styles minimap-styles {})]
-      [:> Background]
-      [:> Controls]]]))
+    ;[:> ReactFlowProvider
+    [:> ReactFlow params
+     [:> MiniMap (if minimap-styles minimap-styles {})]
+     [:> Background]
+     [:> Controls]]))
 
 
 (defn- diagram [& {:keys [component-id
-                          orig-data
+                          data
                           nodes edges
                           node-types edge-types
-                          minimap-styles ;on-drop on-drag-over
+                          minimap-styles                    ;on-drop on-drag-over
                           zoom-on-scroll preventScrolling connectFn
                           flowInstance
                           force-layout?] :as params}]
 
   ;(log/info "editable-flow (params)" params)
 
-  (let [n        nodes
-        e        edges
+  (let [n        (:nodes @data)
+        e        (:edges @data)
         [ns set-nodes on-change-nodes] (useNodesState (clj->js n))
         [es set-edges on-change-edges] (useEdgesState (clj->js e))
         !wrapper (clojure.core/atom nil)]
 
 
-    (log/info "editable-flow"
-      ;"//" (js->clj node-types)
-      "//" (js->clj edge-types))
+    ;(log/info "editable-flow"
+    ;  ;"//" (js->clj node-types)
+    ;  "//" (js->clj edge-types))
     ;  "//" ns
     ;  "//" nodes)
     ;  "//" set-nodes
     ;  "//" on-change-nodes)
 
-    [:div#wrapper {:style {:width "800px" :height "700px"}
-                   :ref   (fn [el]
-                            (reset! !wrapper el))}
-     [diagram*
-      :component-id component-id
-      :orig-data orig-data
-      :nodes ns :edges es
-      :on-change-nodes on-change-nodes
-      :on-change-edges on-change-edges
-      :node-types node-types
-      :edge-types edge-types
-      :minimap-styles minimap-styles
-      :connectFn (partial on-connect orig-data flowInstance set-edges !wrapper)
-      :zoom-on-scroll zoom-on-scroll
-      :preventScrolling preventScrolling
-      :on-drop (partial on-drop component-id orig-data flowInstance set-nodes !wrapper)
-      :on-drag-over on-drag-over
-      :flowInstance flowInstance]]))
+    [:> ReactFlowProvider
+     [:div#wrapper {:style {:width "800px" :height "700px"}
+                    :ref   (fn [el] (reset! !wrapper el))}
+      [diagram*
+       :component-id component-id
+       :data data
+       :nodes ns
+       :edges es
+       :on-change-nodes on-change-nodes
+       :on-change-edges on-change-edges
+       :node-types node-types
+       :edge-types edge-types
+       :minimap-styles minimap-styles
+       :onConnect (partial on-connect data flowInstance set-edges !wrapper)
+       :zoom-on-scroll zoom-on-scroll
+       :preventScrolling preventScrolling
+       :onDrop (partial on-drop component-id data flowInstance set-nodes !wrapper)
+       :flowInstance flowInstance]]]))
 
 
 (defn editable-diagram [& {:keys [data
@@ -406,24 +408,16 @@
     ;(log/info "component (DIGRAPH)" "//" data "//" @d "// node-types" node-types "// n-types" (js->clj n-types))
 
     (fn []
-      [rc/h-box :src (rc/at)
-       :gap "10px"
-       :children [;[tool-panel open-details? (:components @d) component-id tool-types]
-                  [:f> diagram
-                   :component-id component-id
-                   :orig-data d
-                   :nodes (:nodes @d)
-                   :edges (:edges @d)
-                   :node-types n-types
-                   :edge-types edge-types
-                   ;:on-drop on-drop
-                   ;:on-drag-over on-drag-over
-                   :minimap-styles (or minimap-styles {})
-                   ;:connectFn connectFn
-                   :zoom-on-scroll zoom-on-scroll
-                   :preventScrolling preventScrolling
-                   :flowInstance flowInstance
-                   :force-layout? force-layout?]]])))
+      [:f> diagram
+       :component-id component-id
+       :data d
+       :node-types n-types
+       :edge-types edge-types
+       :minimap-styles (or minimap-styles {})
+       :zoom-on-scroll zoom-on-scroll
+       :preventScrolling preventScrolling
+       :flowInstance flowInstance
+       :force-layout? force-layout?])))
 
 
 

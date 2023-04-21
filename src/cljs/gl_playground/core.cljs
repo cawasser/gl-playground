@@ -64,18 +64,22 @@
 
      [rc/h-box
       :gap "5px"
-      :children [[rc/v-box :gap "2px"
-                  :children [[diagram/make-draggable-node ":ui/component" ":ui/component" :ui/component]
-                             [diagram/make-draggable-node ":source/remote" ":source/remote" :source/remote]
-                             [diagram/make-draggable-node "Color Picker" "color-picker" :source/local]
-                             [diagram/make-draggable-node "Editable" "editable-node" :source/fn]]]
-                 [diagram-r/editable-diagram
-                  :data data
-                  :component-id "editable-diragram-rccst"
-                  :node-types diagram-r/node-types
-                  :controls true
-                  :mini-map true
-                  :background true]]]]))
+      :children [[rc/box
+                  :size "auto"
+                  :child [rc/v-box :gap "2px" :width "200px"
+                          :children [[diagram/make-draggable-node ":ui/component" ":ui/component" :ui/component]
+                                     [diagram/make-draggable-node ":source/remote" ":source/remote" :source/remote]
+                                     [diagram/make-draggable-node "Color Picker" "color-picker" :source/local]
+                                     [diagram/make-draggable-node "Editable" "editable-node" :source/fn]]]]
+                 [rc/box
+                  :size "auto"
+                  :child [diagram-r/editable-diagram
+                          :data data
+                          :component-id "editable-diragram-rccst"
+                          :node-types diagram-r/node-types
+                          :controls true
+                          :mini-map true
+                          :background true]]]]]))
 
 
 (defn ^:dev/after-load-async mount-components
