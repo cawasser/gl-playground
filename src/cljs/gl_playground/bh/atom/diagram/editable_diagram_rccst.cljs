@@ -6,6 +6,8 @@
             [gl-playground.bh.atom.diagram.custom-nodes.custom-node :as cn]
             [gl-playground.bh.atom.diagram.custom-nodes.color-picker-node :as cp-node]
             [gl-playground.bh.atom.diagram.custom-nodes.editable-node :as e-node]
+            [gl-playground.bh.atom.diagram.custom-nodes.menu-node :as m-node]
+            [gl-playground.globals :as globals]
             ["react" :as react]
             ["reactflow$default" :as ReactFlow]
             ["reactflow" :refer (ReactFlowProvider MiniMap Controls
@@ -181,16 +183,11 @@
 
 
 
-
+(def atom-data (gl-playground.globals/get-data))
 
 
 ;(input-output-handles label inputs outputs)])))
-
-(def node-types {":ui/component"  (partial cn/custom-node :ui/component)
-                 ":source/remote" (partial cn/custom-node :source/remote)
-                 "color-picker" (partial cp-node/color-picker-node :source/local)
-                 "editable-node" (partial e-node/editableNode :source/fn)})
-
+(def style (r/atom :ui/component))
 
 ;; region ; digraph drag-and-drop support
 
@@ -219,7 +216,7 @@
     ;"//" (js->clj reactFlowBounds)
 
     (when (not= node-type "undefined")
-      (let [new-id   (str node-type "-new")
+      (let [new-id   (str node-type "-new" (count {:nodes data}))
             position ((.-project @reactFlowInstance) (clj->js {:x (- x (.-left reactFlowBounds))
                                                                :y (- y (.-top reactFlowBounds))}))
             new-node {:id       new-id
@@ -308,7 +305,7 @@
                            on-change-nodes on-change-edges on-drop on-drag-over
                            zoom-on-scroll preventScrolling connectFn] :as params}]
 
-  ;(log/info "flow-star (params)" params "// (edge-types)" edge-types)
+  (print "Diagram* nodetypes" node-types)
 
   (let [params (apply merge {:nodes               nodes
                              :edges               edges
@@ -335,6 +332,21 @@
       [:> Controls]]]))
 
 
+;(defn node-types [update-node-type]  #js {":ui/component"  (partial cn/custom-node :ui/component)
+;              ":source/remote" (partial cn/custom-node :source/remote)
+;              "color-picker" (partial cp-node/color-picker-node :source/local)
+;              "editable-node" (partial e-node/editableNode :source/fn)
+;              "menu-node" (partial m-node/menu-node style update-node-type)})
+
+(defn update-node-type [new-node-type set-nodes]
+                           (println "Updated:" new-node-type)
+                           (println @atom-data)
+                           (println (get-in @atom-data [:nodes 2 :type] )  )
+                           (println "New data"(assoc-in @atom-data [:nodes 2 :type] new-node-type))
+                           (swap! atom-data assoc-in [:nodes 2 :type] new-node-type)
+                           ;(swap! atom-data assoc (assoc-in @atom-data [:nodes 2 :type] new-node-type))
+                           (set-nodes :nodes @atom-data) (println @atom-data)
+  )
 (defn- diagram [& {:keys [component-id
                           orig-data
                           nodes edges
@@ -346,20 +358,29 @@
 
   ;(log/info "editable-flow (params)" params)
 
-  (let [n        nodes
-        e        edges
+  (let [n        (get @orig-data :nodes)
+        e        (get @orig-data :edges)
         [ns set-nodes on-change-nodes] (useNodesState (clj->js n))
         [es set-edges on-change-edges] (useEdgesState (clj->js e))
-        !wrapper (clojure.core/atom nil)]
+        !wrapper (clojure.core/atom nil)
 
 
-    (log/info "editable-flow"
-      ;"//" (js->clj node-types)
-      "//" (js->clj edge-types))
-    ;  "//" ns
-    ;  "//" nodes)
-    ;  "//" set-nodes
-    ;  "//" on-change-nodes)
+        nd-types #js {":ui/component"  (partial cn/custom-node :ui/component)
+                                     ":source/remote" (partial cn/custom-node :source/remote)
+                                     "color-picker" (partial cp-node/color-picker-node :source/local)
+                                     "editable-node" (partial e-node/editableNode :source/fn)
+                                     "menu-node" (partial m-node/menu-node style update-node-type)}
+        open-details? (r/atom {})
+        ;n-types       (->> nd-types
+        ;                   (map (fn [[k v]]
+        ;                          {k (partial v open-details?)}))
+        ;                   (into {})
+        ;                   (clj->js))
+        ]
+    (println "nodetypes" node-types)
+    (println "ndtypes" nd-types)
+    ;(println "ntypes" n-types)
+    (println "Data" @orig-data)
 
     [:div#wrapper {:style {:width "800px" :height "700px"}
                    :ref   (fn [el]
@@ -370,8 +391,9 @@
       :nodes ns :edges es
       :on-change-nodes on-change-nodes
       :on-change-edges on-change-edges
-      :node-types node-types
+      :node-types nd-types
       :edge-types edge-types
+      :set-nodes set-nodes
       :minimap-styles minimap-styles
       :connectFn (partial on-connect orig-data flowInstance set-edges !wrapper)
       :zoom-on-scroll zoom-on-scroll
@@ -379,6 +401,13 @@
       :on-drop (partial on-drop component-id orig-data flowInstance set-nodes !wrapper)
       :on-drag-over on-drag-over
       :flowInstance flowInstance]]))
+
+
+;(def node-types {":ui/component"  (partial cn/custom-node :ui/component)
+;                 ":source/remote" (partial cn/custom-node :source/remote)
+;                 "color-picker" (partial cp-node/color-picker-node :source/local)
+;                 "editable-node" (partial e-node/editableNode :source/fn)
+;                 "menu-node" (partial m-node/menu-node style update-node-type)})
 
 
 (defn editable-diagram [& {:keys [data
@@ -400,7 +429,15 @@
                                {k (partial v open-details?)}))
                         (into {})
                         (clj->js))
-        flowInstance  (clojure.core/atom nil)]
+        flowInstance  (clojure.core/atom nil)
+
+
+        ;var-node-types { ":ui/component" (partial cn/custom-node :ui/component)
+        ;                 ":source/remote" (partial cn/custom-node :source/remote)
+        ;                 "color-picker" (partial cp-node/color-picker-node :source/local)
+        ;                 "editable-node" (partial e-node/editableNode :source/fn)
+        ;                 "menu-node" (partial m-node/menu-node style)}
+        ]
 
 
     ;(log/info "component (DIGRAPH)" "//" data "//" @d "// node-types" node-types "// n-types" (js->clj n-types))

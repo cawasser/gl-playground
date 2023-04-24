@@ -12,7 +12,8 @@
     [gl-playground.widget.just-a-button]
     [gl-playground.widget.simple-form]
     [gl-playground.bh.atom.diagram.editable-diagram :as diagram]
-    [gl-playground.bh.atom.diagram.editable-diagram-rccst :as diagram-r]))
+    [gl-playground.bh.atom.diagram.editable-diagram-rccst :as diagram-r]
+    [gl-playground.globals :as globals]))
 ;[gl-playground.bh.atom.diagram.CustomNodes.EditableNode :as EditableNode]
 
 
@@ -53,9 +54,10 @@
 (def initialEdges [{:id "e1-2", :source "100", :target "200"
                     :style {:strokeWidth 1 :stroke :yellow}
                     :arrowHeadType "arrowclosed"}])
-(defonce data (r/atom {:nodes initialNodes :edges initialEdges}))
+(defonce data (globals/get-data))
 
 
+(def node-type (r/atom "menu-node"))
 
 (defn page []
   (let [text-value    (r/atom "Type Here")
@@ -68,7 +70,9 @@
                   :children [[diagram/make-draggable-node ":ui/component" ":ui/component" :ui/component]
                              [diagram/make-draggable-node ":source/remote" ":source/remote" :source/remote]
                              [diagram/make-draggable-node "Color Picker" "color-picker" :source/local]
-                             [diagram/make-draggable-node "Editable" "editable-node" :source/fn]]]
+                             [diagram/make-draggable-node "Editable" "editable-node" :source/fn]
+                             [diagram/make-draggable-node "Menu Node" "menu-node" :source/remote]
+                             ]]
                  [diagram-r/editable-diagram
                   :data data
                   :component-id "editable-diragram-rccst"
