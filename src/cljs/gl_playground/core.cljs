@@ -12,8 +12,7 @@
     [gl-playground.widget.just-a-button]
     [gl-playground.widget.simple-form]
     [gl-playground.bh.atom.diagram.editable-diagram :as diagram]
-    [gl-playground.bh.atom.diagram.editable-diagram-rccst :as diagram-r]
-    [gl-playground.globals :as globals]))
+    [gl-playground.bh.atom.diagram.editable-diagram-rccst :as diagram-r]))
 ;[gl-playground.bh.atom.diagram.CustomNodes.EditableNode :as EditableNode]
 
 
@@ -54,10 +53,9 @@
 (def initialEdges [{:id "e1-2", :source "100", :target "200"
                     :style {:strokeWidth 1 :stroke :yellow}
                     :arrowHeadType "arrowclosed"}])
-(defonce data (globals/get-data))
+(defonce data (r/atom {:nodes initialNodes :edges initialEdges}))
 
 
-(def node-type (r/atom "menu-node"))
 
 (defn page []
   (let [text-value    (r/atom "Type Here")
@@ -66,20 +64,22 @@
 
      [rc/h-box
       :gap "5px"
-      :children [[rc/v-box :gap "2px"
-                  :children [[diagram/make-draggable-node ":ui/component" ":ui/component" :ui/component]
-                             [diagram/make-draggable-node ":source/remote" ":source/remote" :source/remote]
-                             [diagram/make-draggable-node "Color Picker" "color-picker" :source/local]
-                             [diagram/make-draggable-node "Editable" "editable-node" :source/fn]
-                             [diagram/make-draggable-node "Menu Node" "menu-node" :source/remote]
-                             ]]
-                 [diagram-r/editable-diagram
-                  :data data
-                  :component-id "editable-diragram-rccst"
-                  :node-types diagram-r/node-types
-                  :controls true
-                  :mini-map true
-                  :background true]]]]))
+      :children [[rc/box
+                  :size "auto"
+                  :child [rc/v-box :gap "2px" :width "200px"
+                          :children [[diagram/make-draggable-node ":ui/component" ":ui/component" :ui/component]
+                                     [diagram/make-draggable-node ":source/remote" ":source/remote" :source/remote]
+                                     [diagram/make-draggable-node "Color Picker" "color-picker" :source/local]
+                                     [diagram/make-draggable-node "Editable" "editable-node" :source/fn]]]]
+                 [rc/box
+                  :size "auto"
+                  :child [diagram-r/editable-diagram
+                          :data data
+                          :component-id "editable-diragram-rccst"
+                          :node-types diagram-r/node-types
+                          :controls true
+                          :mini-map true
+                          :background true]]]]]))
 
 
 (defn ^:dev/after-load-async mount-components

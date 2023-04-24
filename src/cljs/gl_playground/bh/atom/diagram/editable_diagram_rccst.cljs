@@ -6,8 +6,6 @@
             [gl-playground.bh.atom.diagram.custom-nodes.custom-node :as cn]
             [gl-playground.bh.atom.diagram.custom-nodes.color-picker-node :as cp-node]
             [gl-playground.bh.atom.diagram.custom-nodes.editable-node :as e-node]
-            [gl-playground.bh.atom.diagram.custom-nodes.menu-node :as m-node]
-            [gl-playground.globals :as globals]
             ["react" :as react]
             ["reactflow$default" :as ReactFlow]
             ["reactflow" :refer (ReactFlowProvider MiniMap Controls
@@ -183,11 +181,16 @@
 
 
 
-(def atom-data (gl-playground.globals/get-data))
+
 
 
 ;(input-output-handles label inputs outputs)])))
-(def style (r/atom :ui/component))
+
+(def node-types {":ui/component"  (partial cn/custom-node :ui/component)
+                 ":source/remote" (partial cn/custom-node :source/remote)
+                 "color-picker" (partial cp-node/color-picker-node :source/local)
+                 "editable-node" (partial e-node/editableNode :source/fn)})
+
 
 ;; region ; digraph drag-and-drop support
 
@@ -216,7 +219,7 @@
     ;"//" (js->clj reactFlowBounds)
 
     (when (not= node-type "undefined")
-      (let [new-id   (str node-type "-new" (count {:nodes data}))
+      (let [new-id   (str node-type "-new")
             position ((.-project @reactFlowInstance) (clj->js {:x (- x (.-left reactFlowBounds))
                                                                :y (- y (.-top reactFlowBounds))}))
             new-node {:id       new-id
@@ -255,7 +258,7 @@
         new-edge  {:id     (str source-id "->" target-id)
                    :source source-id
                    :target target-id
-                   :style {:stroke :green :strokeWidth 2}}]
+                   :style  {:stroke :green :strokeWidth 2}}]
     ;(log/info "connecting" new-edge)
 
     ;add the new nodes to the original nodes data (an atom)...
@@ -298,14 +301,16 @@
                 [:p @open-details?]]]]])
 
 
-(defn- diagram* [& {:keys [component-id nodes edges
+(defn- diagram* [& {:keys [component-id
+                           data
+                           nodes edges
                            node-types edge-types
                            minimap-styles
                            flowInstance
-                           on-change-nodes on-change-edges on-drop on-drag-over
-                           zoom-on-scroll preventScrolling connectFn] :as params}]
+                           on-change-nodes on-change-edges onDrop on-drag-over
+                           zoom-on-scroll preventScrolling onConnect] :as params}]
 
-  (print "Diagram* nodetypes" node-types)
+  ;(log/info "flow-star (params)" params "// (edge-types)" edge-types)
 
   (let [params (apply merge {:nodes               nodes
                              :edges               edges
@@ -313,40 +318,25 @@
                              :onEdgesChange       on-change-edges
                              :zoomOnScroll        (or zoom-on-scroll false)
                              :preventScrolling    (or preventScrolling false)
-                             :onConnect           (or connectFn #())
+                             :onConnect           (or onConnect #())
                              :fitView             true
                              :defaultViewport     {:x 0 :y 0 :zoom 1.5}
                              :attributionPosition "bottom-left"
-                             :onDrop              (or on-drop #())
+                             :onDrop              (or onDrop #())
                              :onDragOver          (or on-drag-over #())
-                             :onInit              (fn [generatedFlowInstance] (reset! flowInstance generatedFlowInstance))}
+                             :onInit              (fn [r] (reset! flowInstance r))}
                  (when node-types {:node-types node-types})
                  (when edge-types {:edge-types edge-types}))]
 
     ;(log/info "flow-star (local-params)" params)
 
-    [:> ReactFlowProvider
-     [:> ReactFlow params
-      [:> MiniMap (if minimap-styles minimap-styles {})]
-      [:> Background]
-      [:> Controls]]]))
+    ;[:> ReactFlowProvider
+    [:> ReactFlow params
+     [:> MiniMap (if minimap-styles minimap-styles {})]
+     [:> Background]
+     [:> Controls]]))
 
 
-;(defn node-types [update-node-type]  #js {":ui/component"  (partial cn/custom-node :ui/component)
-;              ":source/remote" (partial cn/custom-node :source/remote)
-;              "color-picker" (partial cp-node/color-picker-node :source/local)
-;              "editable-node" (partial e-node/editableNode :source/fn)
-;              "menu-node" (partial m-node/menu-node style update-node-type)})
-
-(defn update-node-type [new-node-type set-nodes]
-                           (println "Updated:" new-node-type)
-                           (println @atom-data)
-                           (println (get-in @atom-data [:nodes 2 :type] )  )
-                           (println "New data"(assoc-in @atom-data [:nodes 2 :type] new-node-type))
-                           (swap! atom-data assoc-in [:nodes 2 :type] new-node-type)
-                           ;(swap! atom-data assoc (assoc-in @atom-data [:nodes 2 :type] new-node-type))
-                           (set-nodes :nodes @atom-data) (println @atom-data)
-  )
 (defn- diagram [& {:keys [component-id
                           orig-data
                           nodes edges
@@ -358,29 +348,20 @@
 
   ;(log/info "editable-flow (params)" params)
 
-  (let [n        (get @orig-data :nodes)
-        e        (get @orig-data :edges)
+  (let [n        nodes
+        e        edges
         [ns set-nodes on-change-nodes] (useNodesState (clj->js n))
         [es set-edges on-change-edges] (useEdgesState (clj->js e))
-        !wrapper (clojure.core/atom nil)
+        !wrapper (clojure.core/atom nil)]
 
 
-        nd-types #js {":ui/component"  (partial cn/custom-node :ui/component)
-                                     ":source/remote" (partial cn/custom-node :source/remote)
-                                     "color-picker" (partial cp-node/color-picker-node :source/local)
-                                     "editable-node" (partial e-node/editableNode :source/fn)
-                                     "menu-node" (partial m-node/menu-node style update-node-type)}
-        open-details? (r/atom {})
-        ;n-types       (->> nd-types
-        ;                   (map (fn [[k v]]
-        ;                          {k (partial v open-details?)}))
-        ;                   (into {})
-        ;                   (clj->js))
-        ]
-    (println "nodetypes" node-types)
-    (println "ndtypes" nd-types)
-    ;(println "ntypes" n-types)
-    (println "Data" @orig-data)
+    (log/info "editable-flow"
+      ;"//" (js->clj node-types)
+      "//" (js->clj edge-types))
+    ;  "//" ns
+    ;  "//" nodes)
+    ;  "//" set-nodes
+    ;  "//" on-change-nodes)
 
     [:div#wrapper {:style {:width "800px" :height "700px"}
                    :ref   (fn [el]
@@ -391,9 +372,8 @@
       :nodes ns :edges es
       :on-change-nodes on-change-nodes
       :on-change-edges on-change-edges
-      :node-types nd-types
+      :node-types node-types
       :edge-types edge-types
-      :set-nodes set-nodes
       :minimap-styles minimap-styles
       :connectFn (partial on-connect orig-data flowInstance set-edges !wrapper)
       :zoom-on-scroll zoom-on-scroll
@@ -401,13 +381,6 @@
       :on-drop (partial on-drop component-id orig-data flowInstance set-nodes !wrapper)
       :on-drag-over on-drag-over
       :flowInstance flowInstance]]))
-
-
-;(def node-types {":ui/component"  (partial cn/custom-node :ui/component)
-;                 ":source/remote" (partial cn/custom-node :source/remote)
-;                 "color-picker" (partial cp-node/color-picker-node :source/local)
-;                 "editable-node" (partial e-node/editableNode :source/fn)
-;                 "menu-node" (partial m-node/menu-node style update-node-type)})
 
 
 (defn editable-diagram [& {:keys [data
@@ -429,15 +402,7 @@
                                {k (partial v open-details?)}))
                         (into {})
                         (clj->js))
-        flowInstance  (clojure.core/atom nil)
-
-
-        ;var-node-types { ":ui/component" (partial cn/custom-node :ui/component)
-        ;                 ":source/remote" (partial cn/custom-node :source/remote)
-        ;                 "color-picker" (partial cp-node/color-picker-node :source/local)
-        ;                 "editable-node" (partial e-node/editableNode :source/fn)
-        ;                 "menu-node" (partial m-node/menu-node style)}
-        ]
+        flowInstance  (clojure.core/atom nil)]
 
 
     ;(log/info "component (DIGRAPH)" "//" data "//" @d "// node-types" node-types "// n-types" (js->clj n-types))
