@@ -21,18 +21,18 @@
 
 
 (defn- on-drag-start [node-type event]
-  ;(print node-type)
+  (print node-type)
   (.setData (.-dataTransfer event) "editable-flow" node-type)
   (set! (.-effectAllowed (.-dataTransfer event)) "move"))
 
 
 (defn- on-drag-over [event]
+  (print "on-drag-over")
   (.preventDefault event)
   (set! (.-dropEffect (.-dataTransfer event)) "move"))
 
-
 (defn- on-drop [reactFlowInstance data set-nodes-fn wrapper event]
-  ;(log/info "on-drop" (js->clj @reactFlowInstance) @data)
+  (log/info "on-drop" (js->clj @reactFlowInstance) @data)
 
   (.preventDefault event)
 
@@ -145,7 +145,8 @@
                  :edges           edge-state
                  :on-change-nodes on-change-nodes
                  :on-change-edges on-change-edges
-                 :onDrop          (partial on-drop flowInstance data set-nodes wrapper)
+                 :onDrop          #(print "test on drop")
+                 ;(partial on-drop flowInstance data set-nodes wrapper)
                  :onConnect       (partial on-connect flowInstance data set-edges wrapper)
                  :wrapper         wrapper
                  :flowInstance    flowInstance}]]]))

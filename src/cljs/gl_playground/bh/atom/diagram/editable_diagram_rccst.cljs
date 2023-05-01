@@ -6,6 +6,7 @@
             [gl-playground.bh.atom.diagram.custom-nodes.custom-node :as cn]
             [gl-playground.bh.atom.diagram.custom-nodes.color-picker-node :as cp-node]
             [gl-playground.bh.atom.diagram.custom-nodes.editable-node :as e-node]
+            [gl-playground.bh.atom.diagram.custom-nodes.menu-node :as m-node]
             ["react" :as react]
             ["reactflow$default" :as ReactFlow]
             ["reactflow" :refer (ReactFlowProvider MiniMap Controls
@@ -186,10 +187,19 @@
 
 ;(input-output-handles label inputs outputs)])))
 
+(def style (r/atom :ui/component))
+
+
 (def node-types {":ui/component"  (partial cn/custom-node :ui/component)
+                                   ":source/remote" (partial cn/custom-node :source/remote)
+                                   "color-picker" (partial cp-node/color-picker-node :source/local)
+                                   "editable-node" (partial e-node/editableNode :source/fn)
+                                   "menu-node" (partial m-node/menu-node style #())})
+(defn node-types-fn [update-node-fn] {":ui/component"  (partial cn/custom-node :ui/component)
                  ":source/remote" (partial cn/custom-node :source/remote)
                  "color-picker" (partial cp-node/color-picker-node :source/local)
-                 "editable-node" (partial e-node/editableNode :source/fn)})
+                 "editable-node" (partial e-node/editableNode :source/fn)
+                 "menu-node" (partial m-node/menu-node style update-node-fn)})
 
 
 ;; region ; digraph drag-and-drop support
@@ -206,6 +216,7 @@
 
 (defn- on-drop [component-id data reactFlowInstance set-nodes-fn wrapper event]
   (.preventDefault event)
+  (print "in on drop")
 
   (let [node-type       (.getData (.-dataTransfer event) "editable-flow")
         x               (.-clientX event)
@@ -322,7 +333,7 @@
                              :fitView             true
                              :defaultViewport     {:x 0 :y 0 :zoom 1.5}
                              :attributionPosition "bottom-left"
-                             :onDrop              (or onDrop #())
+                             :onDrop              (or onDrop #(print "no on drop"))
                              :onDragOver          (or on-drag-over #())
                              :onInit              (fn [r] (reset! flowInstance r))}
                  (when node-types {:node-types node-types})
@@ -352,12 +363,15 @@
         e        edges
         [ns set-nodes on-change-nodes] (useNodesState (clj->js n))
         [es set-edges on-change-edges] (useEdgesState (clj->js e))
-        !wrapper (clojure.core/atom nil)]
+        !wrapper (clojure.core/atom nil)
+        open-details? (r/atom {})
+        n-types       (->> (node-types-fn #())
+                           (clj->js))]
 
 
-    (log/info "editable-flow"
-      ;"//" (js->clj node-types)
-      "//" (js->clj edge-types))
+    ;(log/info "editable-flow"
+    ;  ;"//" (js->clj node-types)
+    ;  "//" (js->clj edge-types))
     ;  "//" ns
     ;  "//" nodes)
     ;  "//" set-nodes
@@ -372,13 +386,13 @@
       :nodes ns :edges es
       :on-change-nodes on-change-nodes
       :on-change-edges on-change-edges
-      :node-types node-types
+      :node-types n-types
       :edge-types edge-types
       :minimap-styles minimap-styles
       :connectFn (partial on-connect orig-data flowInstance set-edges !wrapper)
       :zoom-on-scroll zoom-on-scroll
       :preventScrolling preventScrolling
-      :on-drop (partial on-drop component-id orig-data flowInstance set-nodes !wrapper)
+      :onDrop (partial on-drop component-id orig-data flowInstance set-nodes !wrapper)
       :on-drag-over on-drag-over
       :flowInstance flowInstance]]))
 
@@ -397,7 +411,7 @@
 
   (let [d             data
         open-details? (r/atom {})
-        n-types       (->> node-types
+        n-types       (->> (node-types #())
                         (map (fn [[k v]]
                                {k (partial v open-details?)}))
                         (into {})

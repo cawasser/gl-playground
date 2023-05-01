@@ -42,8 +42,8 @@
             [:div {:style (merge cn/default-node-style (@style cn/node-style)) :on-mouse-enter #(reset! isVisible (-> true))}
              [:> NodeToolbar {:isVisible isVisible :position (.-Top Position)}
               [:select {:name "node-type" :on-change
-                        ;#(println "updated")
-                        #(update-node-type (-> % (.-target) (.-value) keyword))
+                        #(println "updated")
+                        ;#(update-node-type (-> % (.-target) (.-value) keyword))
                         ;#(swap! data update-in [:nodes :type] keyword (.-target %))
                         ;#((assoc (get-in data [:nodes :type])(-> % (.-target) (.-value) keyword)))
                         ;#((reset! style (-> % (.-target) (.-value) keyword))

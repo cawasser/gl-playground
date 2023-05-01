@@ -70,7 +70,8 @@
                           :children [[diagram/make-draggable-node ":ui/component" ":ui/component" :ui/component]
                                      [diagram/make-draggable-node ":source/remote" ":source/remote" :source/remote]
                                      [diagram/make-draggable-node "Color Picker" "color-picker" :source/local]
-                                     [diagram/make-draggable-node "Editable" "editable-node" :source/fn]]]]
+                                     [diagram/make-draggable-node "Editable" "editable-node" :source/fn]
+                                     [diagram/make-draggable-node "Menu Node" "menu-node" :ui/component]]]]
                  [rc/box
                   :size "auto"
                   :child [diagram-r/editable-diagram
