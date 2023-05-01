@@ -6,6 +6,7 @@
             [gl-playground.bh.atom.diagram.custom-nodes.custom-node :as cn]
             [gl-playground.bh.atom.diagram.custom-nodes.color-picker-node :as cp-node]
             [gl-playground.bh.atom.diagram.custom-nodes.editable-node :as e-node]
+            [gl-playground.bh.atom.diagram.custom-nodes.menu-node :as menu-node]
             ["react" :as react]
             ["reactflow$default" :as ReactFlow]
             ["reactflow" :refer (ReactFlowProvider MiniMap Controls
@@ -188,8 +189,8 @@
 
 (def node-types {":ui/component"  (partial cn/custom-node :ui/component)
                  ":source/remote" (partial cn/custom-node :source/remote)
-                 "color-picker" (partial cp-node/color-picker-node :source/local)
-                 "editable-node" (partial e-node/editableNode :source/fn)})
+                 "color-picker"   (partial cp-node/color-picker-node :source/local)
+                 "editable-node"  (partial e-node/editableNode :source/fn)})
 
 
 ;; region ; digraph drag-and-drop support
@@ -203,6 +204,8 @@
   (.preventDefault event)
   (set! (.-dropEffect (.-dataTransfer event)) "move"))
 
+(def next-id (atom 0))
+
 
 (defn- on-drop [component-id data reactFlowInstance set-nodes-fn wrapper event]
   (.preventDefault event)
@@ -212,19 +215,21 @@
         y               (.-clientY event)
         reactFlowBounds (.getBoundingClientRect @wrapper)]
 
-    ;(log/info "on-drop" node-type
-    ;"//" @wrapper)
+    ;(log/info "on-drop" node-type)
+    ;"//" @wrapper
     ;"//" (.-current @wrapper)
     ;"//" (.getBoundingClientRect @wrapper))
     ;"//" (js->clj reactFlowBounds)
 
     (when (not= node-type "undefined")
-      (let [new-id   (str node-type "-new")
+      (let [new-id   (str node-type "-" (swap! next-id inc))
+            kind     ""
             position ((.-project @reactFlowInstance) (clj->js {:x (- x (.-left reactFlowBounds))
                                                                :y (- y (.-top reactFlowBounds))}))
             new-node {:id       new-id
                       :type     node-type
                       :data     {:label   new-id
+                                 :kind     kind
                                  :inputs  []
                                  :outputs []}
                       :position position}]
@@ -307,7 +312,7 @@
                            node-types edge-types
                            minimap-styles
                            flowInstance
-                           on-change-nodes on-change-edges onDrop on-drag-over
+                           on-change-nodes on-change-edges on-drop on-drag-over
                            zoom-on-scroll preventScrolling onConnect] :as params}]
 
   ;(log/info "flow-star (params)" params "// (edge-types)" edge-types)
@@ -322,7 +327,7 @@
                              :fitView             true
                              :defaultViewport     {:x 0 :y 0 :zoom 1.5}
                              :attributionPosition "bottom-left"
-                             :onDrop              (or onDrop #())
+                             :onDrop              (or on-drop #())
                              :onDragOver          (or on-drag-over #())
                              :onInit              (fn [r] (reset! flowInstance r))}
                  (when node-types {:node-types node-types})
@@ -341,7 +346,7 @@
                           orig-data
                           nodes edges
                           node-types edge-types
-                          minimap-styles ;on-drop on-drag-over
+                          minimap-styles                    ;on-drop on-drag-over
                           zoom-on-scroll preventScrolling connectFn
                           flowInstance
                           force-layout?] :as params}]
@@ -355,9 +360,9 @@
         !wrapper (clojure.core/atom nil)]
 
 
-    (log/info "editable-flow"
-      ;"//" (js->clj node-types)
-      "//" (js->clj edge-types))
+    ;(log/info "editable-flow"
+    ;  "//" (js->clj node-types)
+    ;  "//" (js->clj edge-types))
     ;  "//" ns
     ;  "//" nodes)
     ;  "//" set-nodes

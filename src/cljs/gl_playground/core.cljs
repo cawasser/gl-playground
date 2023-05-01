@@ -75,7 +75,7 @@
                   :size "auto"
                   :child [diagram-r/editable-diagram
                           :data data
-                          :component-id "editable-diragram-rccst"
+                          :component-id "editable-diagram-rccst"
                           :node-types diagram-r/node-types
                           :controls true
                           :mini-map true

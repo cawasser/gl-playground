@@ -40,7 +40,7 @@
         x               (.-clientX event)
         y               (.-clientY event)
         reactFlowBounds (.getBoundingClientRect @wrapper)]
-    (println "on-drop" node-type)
+    ;(println "on-drop" node-type)
 
     (when (not= node-type "undefined")
       (let [new-id   (str "node-" (swap! next-id inc))
@@ -56,14 +56,14 @@
         ;add the new nodes to the original nodes data (an atom)...
         (swap! data assoc :nodes (conj (:nodes @data) new-node))
         ; and this updates the data internal to the React diagram component...
-        (set-nodes-fn (fn [nds] (.concat nds (clj->js new-node))))))
+        (set-nodes-fn (fn [nds] (.concat nds (clj->js new-node))))))))
 
-    (println "on-drop" @data)))
+    ;(println "on-drop" @data)))
 
 
 
 (defn make-draggable-node [label node-type color]
-  (println "make-draggable-node" node-type)
+  ;(println "make-draggable-node" node-type)
 
   ^{:key label}
   [:div.draggable
@@ -108,7 +108,7 @@
                          on-change-nodes on-change-edges
                          onDrop onConnect
                          wrapper flowInstance]}]
-  (println "diagram(star)")
+  ;(println "diagram(star)")
 
   [:> ReactFlow {:nodes            nodes
                  :edges            edges
@@ -135,7 +135,7 @@
         [edge-state set-edges on-change-edges] (useEdgesState (clj->js edges))
         wrapper (clojure.core/atom nil)]
 
-    (println "diagram")
+    ;(println "diagram")
 
     [:> ReactFlowProvider
      [:div#wrapper {:style {:width "800px" :height "800px"}
