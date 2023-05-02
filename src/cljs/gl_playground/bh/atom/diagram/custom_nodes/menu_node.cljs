@@ -32,7 +32,7 @@
 ;        (not= @(get-in next-props [:data :nodes]) @(get-in data [:nodes]))))))
 
 
-(defn menu-node [style update-node-type]
+(defn menu-node [style]
   (let [isVisible (r/atom false)]
         ;node-type (r/atom starting-node-type)
 
@@ -41,15 +41,7 @@
     (r/as-element
       [:div {:style (merge cn/default-node-style (@style cn/node-style)) :on-mouse-enter #(reset! isVisible (-> true))}
        [:> NodeToolbar {:isVisible isVisible :position (.-Top Position)}
-        [:select {:name "node-type" :on-change
-                  ;#(println "updated")
-                  #(update-node-type (-> % (.-target) (.-value) keyword))}
-                  ;#(swap! data update-in [:nodes :type] keyword (.-target %))
-                  ;#((assoc (get-in data [:nodes :type])(-> % (.-target) (.-value) keyword)))
-                  ;#((reset! style (-> % (.-target) (.-value) keyword))
-                  ;                                   (println "New style type:" @style)
-                  ;                                   )
-
+        [:select {:name "node-type" :on-change #(println "updated")}
          [:optgroup {:label "Node Type"}
           [:option {:value "ui/component"} ":ui/component"]
           [:option {:value "source/remote"} ":source/remote"]

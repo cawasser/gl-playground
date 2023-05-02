@@ -207,7 +207,7 @@
 (def next-id (atom 0))
 
 
-(defn- on-drop [component-id data reactFlowInstance set-nodes-fn wrapper event]
+(defn- on-drop [component-id data reactFlowInstance set-nodes-fn wrapper update-node-kind-fn event]
   (.preventDefault event)
 
   (let [node-type       (.getData (.-dataTransfer event) "editable-flow")
@@ -223,13 +223,14 @@
 
     (when (not= node-type "undefined")
       (let [new-id   (str node-type "-" (swap! next-id inc))
-            kind     ""
+            kind     ":ui/table"
             position ((.-project @reactFlowInstance) (clj->js {:x (- x (.-left reactFlowBounds))
                                                                :y (- y (.-top reactFlowBounds))}))
             new-node {:id       new-id
                       :type     node-type
                       :data     {:label   new-id
                                  :kind     kind
+                                 :update-node-kind-fn update-node-kind-fn
                                  :inputs  []
                                  :outputs []}
                       :position position}]
@@ -256,6 +257,7 @@
 
 (defn on-connect [data flowInstance set-edges-fn wrapper event]
   ;(log/info "on-connect" (js->clj event :keywordize-keys true))
+  (print "on connect")
 
   (let [event-map (js->clj event :keywordize-keys true)
         source-id (:source event-map)
@@ -313,7 +315,7 @@
                            minimap-styles
                            flowInstance
                            on-change-nodes on-change-edges on-drop on-drag-over
-                           zoom-on-scroll preventScrolling onConnect] :as params}]
+                           zoom-on-scroll preventScrolling connectFn] :as params}]
 
   ;(log/info "flow-star (params)" params "// (edge-types)" edge-types)
 
@@ -323,7 +325,7 @@
                              :onEdgesChange       on-change-edges
                              :zoomOnScroll        (or zoom-on-scroll false)
                              :preventScrolling    (or preventScrolling false)
-                             :onConnect           (or onConnect #())
+                             :onConnect           (or connectFn #())
                              :fitView             true
                              :defaultViewport     {:x 0 :y 0 :zoom 1.5}
                              :attributionPosition "bottom-left"
@@ -357,8 +359,32 @@
         e        edges
         [ns set-nodes on-change-nodes] (useNodesState (clj->js n))
         [es set-edges on-change-edges] (useEdgesState (clj->js e))
-        !wrapper (clojure.core/atom nil)]
+        !wrapper (clojure.core/atom nil)
+        update-node-kind-fn (fn [kind node-id]
+                              (print "update-node-kind-fn" kind )
+                              (set-nodes (fn [nds]  ;(do (print "test")
+                                                        ;(assoc-in (get nds 2) [:data :kind] kind)
+                                           (print nds)
+                                           (print "node-id" node-id)
+                                           (let [node (js->clj (get nds 2))
+                                                 index (->> (js->clj nds)
+                                                        (keep-indexed (fn [index map]
+                                                                        (when (= (get map "id") node-id)
+                                                                          index)))
+                                                        first)]
+                                           (print node)
+                                           (print index)
 
+                                           (print (assoc-in node ["data" "kind"] kind))
+                                           (clj->js (assoc-in (js->clj nds) [index "data" "kind"] kind)))   ;)
+                                           ;nds
+
+                                           ))
+                              )]
+    (react/useEffect
+      (fn []
+        ;(set-nodes nodes)
+        #js [ns]))
 
     ;(log/info "editable-flow"
     ;  "//" (js->clj node-types)
@@ -367,7 +393,6 @@
     ;  "//" nodes)
     ;  "//" set-nodes
     ;  "//" on-change-nodes)
-
     [:div#wrapper {:style {:width "800px" :height "700px"}
                    :ref   (fn [el]
                             (reset! !wrapper el))}
@@ -383,7 +408,7 @@
       :connectFn (partial on-connect orig-data flowInstance set-edges !wrapper)
       :zoom-on-scroll zoom-on-scroll
       :preventScrolling preventScrolling
-      :on-drop (partial on-drop component-id orig-data flowInstance set-nodes !wrapper)
+      :on-drop (partial on-drop component-id orig-data flowInstance set-nodes !wrapper update-node-kind-fn)
       :on-drag-over on-drag-over
       :flowInstance flowInstance]]))
 

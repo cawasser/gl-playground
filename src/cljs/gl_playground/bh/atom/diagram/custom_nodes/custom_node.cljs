@@ -1,7 +1,8 @@
 (ns gl-playground.bh.atom.diagram.custom-nodes.custom-node
   (:require [reagent.core :as r]
-            ["reactflow" :refer (Handle Position)]
-            [taoensso.timbre :as log]))
+            ["reactflow" :refer (Handle Position NodeToolbar)]
+            [taoensso.timbre :as log]
+            ["react" :as react]))
 
 
 (def handle-style {:width "8px" :height "8px" :borderRadius "50%"})
@@ -23,7 +24,7 @@
               :type          t
               :position      position
               :style         style
-              :onConnect     #(js/console.log "handle onConnect" %)
+              ;:onConnect     #(js/console.log "handle onConnect" %)
               :isConnectable isConnectable}])
 
 (defn- make-handle [direction {:keys [label style position]}]
@@ -33,14 +34,20 @@
 (def ui-component-registry {":ui/table" {:inputs ["data-in" "config-in"] :outputs ["data-out" "config-out" "selection"]}})
 
 
-(def ui-component-registry-almost {":ui/table" {:inputs [{:label "data-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
-                                                         {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
-                                                :outputs [{:label "data-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}
-                                                          {:label "config-out" :style {:bottom 20 :top "auto" :background "#555"} :position (.-Right Position)}]}
+(def ui-component-registry-almost {":ui/table"  {:inputs  [{:label "data-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
+                                                           {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
+                                                 :outputs [{:label "data-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}
+                                                           {:label "config-out" :style {:bottom 20 :top "auto" :background "#555"} :position (.-Right Position)}]}
 
-                                   ":ui/slider" {:inputs [{:label "position-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
-                                                          {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
+                                   ":ui/slider" {:inputs  [{:label "position-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
+                                                           {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
                                                  :outputs [{:label "position-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}]}})
+
+(def get-input-output {:inputs  [{:label "data-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
+                                 {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}
+                                 {:label "position-in" :style {:top 10 :background "#555"} :position (.-Left Position)}]
+                       :outputs [{:label "data-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}
+                                 {:label "config-out" :style {:bottom 20 :top "auto" :background "#555"} :position (.-Right Position)}]})
 
 (defn look-up-ui-component [ui-name]
   (get ui-component-registry-almost ui-name))
@@ -50,8 +57,8 @@
   (keys ui-component-registry-almost))
 
 
-(def custom-handles {:inputs [{:label "data-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
-                              {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
+(def custom-handles {:inputs  [{:label "data-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
+                               {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
                      :outputs [{:label "data-out" :style {:bottom 20 :top "auto" :background "#555"} :position (.-Right Position)}
                                {:label "config-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}]})
 
@@ -62,24 +69,38 @@
   and output (along the bottom)
   "
   [node-type open-details? node & extras?]
-  (let [data    (js->clj node)
-        label   (get-in data ["data" "label"])
-        kind-of-element (get-in data ["data" "kind"])
-        inputs  (get-in data ["data" "inputs"])
+  (let [data (js->clj node)
+        node-id (get data "id")
+        label (get-in data ["data" "label"])
+        kind-of-element (r/atom (get-in data ["data" "kind"]))
+        inputs (get-in data ["data" "inputs"])
         outputs (get-in data ["data" "outputs"])
-        style   (merge default-node-style (node-type node-style))]
+        update-node-kind-fn (get-in data ["data" "update-node-kind-fn"])
+        style (merge default-node-style (node-type node-style))
+        isVisible (r/atom false)]
 
-    (log/info "custom-node" label node-type kind-of-element "///" data "///" inputs "///" outputs "//" extras?)
+   ; (log/info "custom-node" label node-type kind-of-element "///" data "///" inputs "///" outputs "//" extras?)
 
     (r/as-element
-      [:div {:style style}
-       (map #(make-handle "target" %) (:inputs (look-up-ui-component kind-of-element)))
+
+      [:div {:style style :on-mouse-enter #(reset! isVisible (-> true))}
+       [:> NodeToolbar {:isVisible isVisible :position (.-Top Position)}
+        [:select {:name "kind" :on-change
+                  ;#(print "changed")}
+                  ;#(print (-> % (.-target) (.-value) keyword))}
+                  #(update-node-kind-fn (-> % (.-target) (.-value)) node-id)}
+                  ;#(do (reset! kind-of-element (-> % (.-target) (.-value) keyword)) (print @kind-of-element))}
+                  ;#(reset! kind-of-element (-> % (.-target) (.-value) keyword))}
+         [:optgroup {:label "Sub Type"}
+          [:option {:value ":ui/table"} "ui/table"]
+          [:option {:value ":ui/slider"} "ui/slider"]]]]
+       (map #(make-handle "target" %) (:inputs (look-up-ui-component @kind-of-element)))
        [:div {:style    (merge {:textAlign :center} style)
               :on-click #(open-details open-details? node)}
         label]
        [:input.nodrag {:type "color"}]
        [:input.input.nodrag {:type "text" :style {:width "75px"}}]
-       (map #(make-handle "target" %) (:outputs (look-up-ui-component kind-of-element)))])))
+       (map #(make-handle "target" %) (:outputs (look-up-ui-component @kind-of-element)))])))
 
 
 (comment
