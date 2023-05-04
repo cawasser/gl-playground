@@ -7,6 +7,11 @@
             [gl-playground.bh.atom.diagram.custom-nodes.color-picker-node :as cp-node]
             [gl-playground.bh.atom.diagram.custom-nodes.editable-node :as e-node]
             [gl-playground.bh.atom.diagram.custom-nodes.menu-node :as menu-node]
+
+            [gl-playground.bh.atom.diagram.custom-nodes.bh-node :as bh-node]
+            [gl-playground.bh.atom.re-com.slider :as slider]
+            [gl-playground.bh.atom.re-com.color-picker :as color-picker]
+
             ["react" :as react]
             ["reactflow$default" :as ReactFlow]
             ["reactflow" :refer (ReactFlowProvider MiniMap Controls
@@ -17,13 +22,6 @@
                                   useNodesState
                                   useEdgesState
                                   useCallBack Handle Position)]))
-;["react-flow-renderer" :refer (ReactFlowProvider MiniMap Controls
-;                                Handle MarkerType
-;                                Background
-;                                applyNodeChanges
-;                                applyEdgeChanges
-;                                useNodesState
-;                                useEdgesState) :default ReactFlow]))
 
 
 (log/info "bh.ui-component.atom.diagram.editable-digraph")
@@ -187,10 +185,11 @@
 
 ;(input-output-handles label inputs outputs)])))
 
-(def node-types {":ui/component"  (partial cn/custom-node :ui/component)
-                 ":source/remote" (partial cn/custom-node :source/remote)
-                 "color-picker"   (partial cp-node/color-picker-node :source/local)
-                 "editable-node"  (partial e-node/editableNode :source/fn)})
+(defn node-types [component-id]
+  {"editable-node"  (partial e-node/editableNode :source/fn)
+
+   "slider" (partial bh-node/bh-node slider/slider [:value :range] component-id)
+   "color-picker" (partial bh-node/bh-node color-picker/color-picker [:color] component-id)})
 
 
 ;; region ; digraph drag-and-drop support
@@ -361,7 +360,7 @@
         [es set-edges on-change-edges] (useEdgesState (clj->js e))
         !wrapper (clojure.core/atom nil)
         update-node-kind-fn (fn [kind node-id]
-                              (print "update-node-kind-fn" kind )
+                              (print "update-node-kind-fn" kind)
                               (set-nodes (fn [nds]  ;(do (print "test")
                                                         ;(assoc-in (get nds 2) [:data :kind] kind)
                                            (print nds)
@@ -372,15 +371,15 @@
                                                                         (when (= (get map "id") node-id)
                                                                           index)))
                                                         first)]
-                                           (print node)
-                                           (print index)
+                                            (print node)
+                                            (print index)
 
-                                           (print (assoc-in node ["data" "kind"] kind))
-                                           (clj->js (assoc-in (js->clj nds) [index "data" "kind"] kind)))   ;)
+                                            (print (assoc-in node ["data" "kind"] kind))
+                                            (clj->js (assoc-in (js->clj nds) [index "data" "kind"] kind))))))]   ;)
                                            ;nds
 
-                                           ))
-                              )]
+
+
     (react/useEffect
       (fn []
         ;(set-nodes nodes)
