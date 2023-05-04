@@ -53,15 +53,26 @@
 (def initialEdges [{:id "e1-2", :source "100", :target "200"
                     :style {:strokeWidth 1 :stroke :yellow}
                     :arrowHeadType "arrowclosed"}])
-(defonce data (r/atom {:nodes initialNodes :edges initialEdges}))
+
+
+(defn react-flow->dsl [dsl-atom data]
+  ; transform react-flow -> dsl
+  dsl-atom)
+
+
+(defn- dsl->react-flow [the-dsl]
+  ; transform dsl -> react-flow
+  (r/atom {:nodes initialNodes :edges initialEdges}))
 
 
 
 (defn page []
-  (let [text-value    (r/atom "Type Here")
-        open-details? (r/atom {})]
-    [:div {:style {:width "800vw" :height "800vh"}}
+  (let [the-dsl-as-an-atom (atom {})
+        text-value    (r/atom "Type Here")
+        open-details? (r/atom {})
+        data (dsl->react-flow @the-dsl-as-an-atom)]
 
+    [:div {:style {:width "800vw" :height "800vh"}}
      [rc/h-box
       :gap "5px"
       :children [[rc/box
@@ -75,6 +86,7 @@
                   :size "auto"
                   :child [diagram-r/editable-diagram
                           :data data
+                          :update-fn #(partial react-flow->dsl the-dsl-as-an-atom)
                           :component-id "editable-diagram-rccst"
                           :node-types diagram-r/node-types
                           :controls true
