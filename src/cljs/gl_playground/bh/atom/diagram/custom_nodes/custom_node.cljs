@@ -1,6 +1,6 @@
 (ns gl-playground.bh.atom.diagram.custom-nodes.custom-node
   (:require [reagent.core :as r]
-            ["reactflow" :refer (Handle Position NodeToolbar)]
+            ["reactflow" :refer (Handle Position NodeToolbar NodeResizer useNodesState)]
             [taoensso.timbre :as log]
             ["react" :as react]))
 
@@ -10,9 +10,13 @@
                  :source/remote {:background :orange :color :black}
                  :source/local  {:background :blue :color :white}
                  :source/fn     {:background :pink :color :black}})
-(def default-node-style {:padding      "3px" :max-width "100px"
+(def default-node-style {
+                         :minHeight "30px"
+                         :width "100%"
+                         :height "100%"
                          :borderRadius "5px" :margin :auto
-                         :background   :white :color :black})
+                         :background   :white :color :black
+                         })
 
 
 (defn- open-details [open-details? node]
@@ -77,29 +81,33 @@
         outputs (get-in data ["data" "outputs"])
         update-node-kind-fn (get-in data ["data" "update-node-kind-fn"])
         style (merge default-node-style (node-type node-style))
-        isVisible (r/atom false)]
+        [isVisible set-visibility on-change-visibility] (useNodesState false)]
 
    ; (log/info "custom-node" label node-type kind-of-element "///" data "///" inputs "///" outputs "//" extras?)
 
     (r/as-element
 
-      [:div {:style style :on-mouse-enter #(reset! isVisible (-> true))}
-       [:> NodeToolbar {:isVisible isVisible :position (.-Top Position)}
+      [:div {:style style :on-mouse-enter #(set-visibility true) :on-mouse-leave #(set-visibility false)}
+
+       [:> NodeToolbar {
+
+                        :position (.-Top Position)}
         [:select {:name "kind" :on-change
-                  ;#(print "changed")}
-                  ;#(print (-> % (.-target) (.-value) keyword))}
                   #(update-node-kind-fn (-> % (.-target) (.-value)) node-id)}
-                  ;#(do (reset! kind-of-element (-> % (.-target) (.-value) keyword)) (print @kind-of-element))}
-                  ;#(reset! kind-of-element (-> % (.-target) (.-value) keyword))}
          [:optgroup {:label "Sub Type"}
           [:option {:value ":ui/table"} "ui/table"]
           [:option {:value ":ui/slider"} "ui/slider"]]]]
+       [:> NodeResizer {:color "#000000"
+                        :isVisible isVisible
+                        :minWidth 100 :minHeight 30}]
        (map #(make-handle "target" %) (:inputs (look-up-ui-component @kind-of-element)))
-       [:div {:style    (merge {:textAlign :center} style)
+       [:div {
+              :style    (merge {:textAlign :center} style)
               :on-click #(open-details open-details? node)}
+
         label]
-       [:input.nodrag {:type "color"}]
-       [:input.input.nodrag {:type "text" :style {:width "75px"}}]
+       ;[:input.nodrag {:type "color"}]
+       ;[:input.input.nodrag {:type "text" :style {:width "75px"}}]
        (map #(make-handle "target" %) (:outputs (look-up-ui-component @kind-of-element)))])))
 
 

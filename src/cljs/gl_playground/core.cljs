@@ -54,6 +54,18 @@
                     :style {:strokeWidth 1 :stroke :yellow}
                     :arrowHeadType "arrowclosed"}])
 
+(def initialDSL
+
+    {:components  {:ui/bar-chart   {:type :ui/component :name :rechart/bar
+                                    :config-data []}
+                   :ui/line-chart  {:type :ui/component :name :rechart/line
+                                    :config-data []}
+                   :topic/data     {:type :source/local :name :topic/data}}
+     :links       {:topic/data     {:data {:ui/bar-chart   :data
+                                           :ui/line-chart  :data}}}
+     :grid-layout [{:i :ui/line-chart :x 0 :y 0 :w 10 :h 11 :static true}
+                   {:i :ui/bar-chart :x 10 :y 0 :w 10 :h 11 :static true}]})
+
 
 (defn react-flow->dsl [dsl-atom data]
   ; transform react-flow -> dsl

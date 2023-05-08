@@ -17,13 +17,6 @@
                                   useNodesState
                                   useEdgesState
                                   useCallBack Handle Position)]))
-;["react-flow-renderer" :refer (ReactFlowProvider MiniMap Controls
-;                                Handle MarkerType
-;                                Background
-;                                applyNodeChanges
-;                                applyEdgeChanges
-;                                useNodesState
-;                                useEdgesState) :default ReactFlow]))
 
 
 (log/info "bh.ui-component.atom.diagram.editable-digraph")
@@ -361,38 +354,15 @@
         [es set-edges on-change-edges] (useEdgesState (clj->js e))
         !wrapper (clojure.core/atom nil)
         update-node-kind-fn (fn [kind node-id]
-                              (print "update-node-kind-fn" kind )
-                              (set-nodes (fn [nds]  ;(do (print "test")
-                                                        ;(assoc-in (get nds 2) [:data :kind] kind)
-                                           (print nds)
-                                           (print "node-id" node-id)
+                              (set-nodes (fn [nds]
                                            (let [node (js->clj (get nds 2))
                                                  index (->> (js->clj nds)
                                                         (keep-indexed (fn [index map]
                                                                         (when (= (get map "id") node-id)
                                                                           index)))
                                                         first)]
-                                           (print node)
-                                           (print index)
 
-                                           (print (assoc-in node ["data" "kind"] kind))
-                                           (clj->js (assoc-in (js->clj nds) [index "data" "kind"] kind)))   ;)
-                                           ;nds
-
-                                           ))
-                              )]
-    (react/useEffect
-      (fn []
-        ;(set-nodes nodes)
-        #js [ns]))
-
-    ;(log/info "editable-flow"
-    ;  "//" (js->clj node-types)
-    ;  "//" (js->clj edge-types))
-    ;  "//" ns
-    ;  "//" nodes)
-    ;  "//" set-nodes
-    ;  "//" on-change-nodes)
+                                           (clj->js (assoc-in (js->clj nds) [index "data" "kind"] kind))))))]
     [:div#wrapper {:style {:width "800px" :height "700px"}
                    :ref   (fn [el]
                             (reset! !wrapper el))}
@@ -457,29 +427,4 @@
                    :flowInstance flowInstance
                    :force-layout? force-layout?]]])))
 
-
-
-
-(comment
-  (:nodes @sample-data)
-  (swap! sample-data assoc :nodes (conj (:nodes @sample-data)
-                                    {:id "dummy-node" :position {:x 0 :y 0}}))
-
-  (def node-types {":ui/component"  (partial bh.ui-component.molecule.composite.util.ui/custom-node :ui/component)
-                   ":source/remote" (partial bh.ui-component.molecule.composite.util.ui/custom-node :source/remote)
-                   ":source/local"  (partial bh.ui-component.molecule.composite.util.ui/custom-node :source/local)
-                   ":source/fn"     (partial bh.ui-component.molecule.composite.util.ui/custom-node :source/fn)})
-  (def open-details? (r/atom ""))
-
-  (defn- dummy [a b c d]
-    (+ a b c d))
-
-  ((partial (partial dummy 1 1) 1 1))
-  (->> node-types
-    (map (fn [[k v]]
-           {k (partial v open-details?)}))
-    (into {})
-    (clj->js))
-
-  ())
 
