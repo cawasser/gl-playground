@@ -74,6 +74,9 @@
 
   initial-dsl
   (first initialNodes)
+  (def comp :components initial-dsl))
+
+  {:id 1, :type  :position {:x 200, :y 300}, :data {:label ":ui/table" :kind ":ui/table"}}
 
   (def node (first initialNodes))
 
@@ -96,13 +99,14 @@
 
   {:components {(cljs.reader/read-string (get-in node [:data :kind])) {:type (cljs.reader/read-string (:type node)), :name (cljs.reader/read-string (get-in node [:data :label])) , :config-data []},
                 :ui/line-chart {:type :ui/component, :name :rechart/line, :config-data []},
-                :topic/data {:type :source/local, :name :topic/data}}}
+                :topic/data {:type :source/local, :name :topic/data}}
 
 
 
-   ;:links #:topic{:data {:data #:ui{:bar-chart :data, :line-chart :data}}},
-   ;:grid-layout [{:i :ui/line-chart, :x 0, :y 0, :w 10, :h 11, :static true}
-   ;              {:i :ui/bar-chart, :x 10, :y 0, :w 10, :h 11, :static true}]}
+   :links       {:topic/data {:data {:ui/bar-chart  :data
+                                     :ui/line-chart :data}}}
+   :grid-layout [{:i (cljs.reader/read-string (get-in node [:data :kind])), :x (get-in node [:position :x]), :y (get-in node [:position :y]), :w 10, :h 11, :static true}
+                 {:i :ui/bar-chart, :x 10, :y 0, :w 10, :h 11, :static true}]}
   )
 
 (def initial-dsl2
