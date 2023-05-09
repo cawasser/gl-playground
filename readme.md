@@ -16,6 +16,10 @@ Clone the repo locally with:
 
     git clone https://github.com/cawasser/gl-playground
 
+Run an npm install:
+
+    npm install
+
 Use shadow-cljs to start the application for development purposes:
 
     shadow-cljs watch app

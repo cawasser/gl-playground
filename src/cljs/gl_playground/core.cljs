@@ -76,7 +76,21 @@
   (first initialNodes)
 
   (def node (first initialNodes))
-  (map (fn [node]  (into {} (cljs.reader/read-string (get-in node [:data :kind])) {:type (cljs.reader/read-string (:type node)), :name (cljs.reader/read-string (get-in node [:data :label])) , :config-data []})) initialNodes)
+
+  (=
+
+    (assoc nil :components (into {} (map (fn [node]
+                                           {(keyword (edn/read-string (get-in node [:data :kind]))) {:type (edn/read-string (:type node)),
+                                                                                                     :name (edn/read-string (get-in node [:data :label])) , :config-data []}}) initialNodes)))
+
+    {:components {:ui/table     {:type :ui/component :name :ui/table :config-data []}
+                  :ui/bar-chart {:type :ui/component :name :ui/bar-chart :config-data []}}}
+
+    )
+
+  (assoc nil :key/mine "test")
+
+  {:key/mine "test"}
 
 
 
