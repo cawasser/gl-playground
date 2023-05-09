@@ -48,23 +48,60 @@
 
 
 
-(def initialNodes [{:id "100", :position {:x 100, :y 100}, :data {:label "1"}}
-                   {:id "200", :position {:x 100, :y 200}, :data {:label "2"}}])
-(def initialEdges [{:id "e1-2", :source "100", :target "200"
-                    :style {:strokeWidth 1 :stroke :yellow}
+(def initialNodes [
+                   ;{:id "100", :position {:x 100, :y 100}, :data {:label "1"}}
+                   ;{:id "200", :position {:x 100, :y 200}, :data {:label "2"}}
+                   {:id "300", :type ":ui/component" :position {:x 200, :y 300}, :data {:label ":ui/bar-chart" :kind ":ui/bar-chart"}}])
+
+(def initialEdges [{:id            "e1-2", :source "200", :target "300"
+                    :style         {:strokeWidth 1 :stroke :yellow}
                     :arrowHeadType "arrowclosed"}])
+(def initialNodes [{:id "200", :type ":ui/component" :position {:x 200, :y 300}, :data {:label ":ui/table" :kind ":ui/table"}}
+                   {:id "300", :type ":ui/component" :position {:x 300, :y 400}, :data {:label ":ui/bar-chart" :kind ":ui/bar-chart"}}])
+(def initial-dsl
 
-(def initialDSL
+  {:components  {:ui/bar-chart  {:type        :ui/component :name :rechart/bar
+                                 :config-data []}
+                 :ui/line-chart {:type        :ui/component :name :rechart/line
+                                 :config-data []}
+                 :topic/data    {:type :source/local :name :topic/data}}
+   :links       {:topic/data {:data {:ui/bar-chart  :data
+                                     :ui/line-chart :data}}}
+   :grid-layout [{:i :ui/line-chart :x 0 :y 0 :w 10 :h 11 :static true}
+                 {:i :ui/bar-chart :x 10 :y 0 :w 10 :h 11 :static true}]})
 
-    {:components  {:ui/bar-chart   {:type :ui/component :name :rechart/bar
-                                    :config-data []}
-                   :ui/line-chart  {:type :ui/component :name :rechart/line
-                                    :config-data []}
-                   :topic/data     {:type :source/local :name :topic/data}}
-     :links       {:topic/data     {:data {:ui/bar-chart   :data
-                                           :ui/line-chart  :data}}}
-     :grid-layout [{:i :ui/line-chart :x 0 :y 0 :w 10 :h 11 :static true}
-                   {:i :ui/bar-chart :x 10 :y 0 :w 10 :h 11 :static true}]})
+(comment
+
+  initial-dsl
+  (first initialNodes)
+
+  (def node (first initialNodes))
+  (map (fn [node]  (into {} (cljs.reader/read-string (get-in node [:data :kind])) {:type (cljs.reader/read-string (:type node)), :name (cljs.reader/read-string (get-in node [:data :label])) , :config-data []})) initialNodes)
+
+
+
+  {:components {(cljs.reader/read-string (get-in node [:data :kind])) {:type (cljs.reader/read-string (:type node)), :name (cljs.reader/read-string (get-in node [:data :label])) , :config-data []},
+                :ui/line-chart {:type :ui/component, :name :rechart/line, :config-data []},
+                :topic/data {:type :source/local, :name :topic/data}}}
+
+
+
+   ;:links #:topic{:data {:data #:ui{:bar-chart :data, :line-chart :data}}},
+   ;:grid-layout [{:i :ui/line-chart, :x 0, :y 0, :w 10, :h 11, :static true}
+   ;              {:i :ui/bar-chart, :x 10, :y 0, :w 10, :h 11, :static true}]}
+  )
+
+(def initial-dsl2
+  {:components  (reduce #(assoc %1 (:id %2) (:data %2))
+                        {}
+                        initialNodes)
+   :links       (reduce #(assoc-in %1 [:topic/data :data (:type %2)]
+                                   (:id %2))
+                        {}
+                        initialEdges)
+   :grid-layout [{:i :ui/line-chart :x 0 :y 0 :w 10 :h 11 :static true}
+                 {:i :ui/bar-chart :x 10 :y 0 :w 10 :h 11 :static true}]})
+
 
 
 (defn react-flow->dsl [dsl-atom data]
@@ -73,14 +110,54 @@
 
 
 (defn- dsl->react-flow [the-dsl]
-  ; transform dsl -> react-flow
-  (r/atom {:nodes initialNodes :edges initialEdges}))
+  (let [components (get the-dsl :components)
+        links (get the-dsl :links)
+        layout (get the-dsl :grid-layout)
+        nodes (for [node initialNodes]
+                (let [{:keys [type position data]} node
+                      kind (get data :kind)
+                      label (get data :label)]
+                  {:id       (str "node-" (:id node))
+                   :type     (keyword type)
+                   :position position
+                   :data     {:label label :kind kind}}))
+        edges (for [edge initialEdges]
+                (let [{:keys [id source target style arrowHeadType]} edge]
+                  {:id            (str "edge-" id)
+                   :source        (str "node-" source)
+                   :target        (str "node-" target)
+                   :animated      true
+                   :style         style
+                   :arrowHeadType arrowHeadType}))]
+
+    (r/atom {:nodes nodes :edges edges})))
+
+
+;(defn react-flow->dsl [dsl-atom data]
+;  (swap! dsl-atom merge
+;         {:components (reduce (fn [acc [id component]]
+;                                (assoc acc id
+;                                           {:type :ui/component
+;                                            :name (-> component :data :kind)
+;                                            :config-data []}))
+;                              {}
+;                              (:nodes data))
+;          :links (reduce (fn [acc {source target}]
+;                           (update-in acc [:links source :data target] keyword))
+;                         {}
+;                         (:edges data))
+;          :grid-layout (reduce (fn [acc {id :id x :position/y y :position/x w :style/width h :style/height}]
+;                                 (conj acc
+;                                       {:i id :x x :y y :w w :h h :static true}))
+;                               []
+;                               (:nodes data))}))
+
 
 
 
 (defn page []
-  (let [the-dsl-as-an-atom (atom {})
-        text-value    (r/atom "Type Here")
+  (let [the-dsl-as-an-atom (atom initial-dsl)
+        text-value (r/atom "Type Here")
         open-details? (r/atom {})
         data (dsl->react-flow @the-dsl-as-an-atom)]
 
@@ -139,8 +216,8 @@
   (clj->js {:text "some text"})
   (pr-str {:text "some text"})
   (-> {:text "some text"}
-    pr-str
-    edn/read-string)
+      pr-str
+      edn/read-string)
   (js->clj {"text" "some text"})
   ())
 

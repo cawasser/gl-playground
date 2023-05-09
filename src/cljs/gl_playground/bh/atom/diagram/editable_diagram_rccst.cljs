@@ -228,6 +228,8 @@
                                  :outputs []}
                       :position position}]
 
+        (print @data)
+
         (swap! data assoc :nodes (conj (:nodes @data) new-node))
         (set-nodes-fn (fn [nds] (.concat nds (clj->js new-node))))))))
 
