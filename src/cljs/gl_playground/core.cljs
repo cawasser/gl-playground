@@ -40,86 +40,79 @@
 ;(defn main []
 ;  (mount-components))
 
+
+
+
+
+;(def chart (new js/CanvasJS.Chart "" {}))
+;(def chart (js/CanvasJS.Chart. "chartContainer" (clj->js chart-data)))
+
+
+
+
+;(defn render-chart []
+;  (let [chart (-> (CanvasJS.Chart. "container" (clj->js chart-data))
+;                  (.render))]
+;    chart))
+
+; var chart = new CanvasJS.Chart("container", {
+;  //Chart Options - Check https://canvasjs.com/docs/charts/chart-options/
+;  title:{
+;    text: "Basic Column Chart in JavaScript"
+;  },
+;  data: [{
+;    type: "column",
+;    dataPoints: [
+;      { label: "apple",  y: 10  },
+;      { label: "orange", y: 15  },
+;      { label: "banana", y: 25  },
+;      { label: "mango",  y: 30  },
+;      { label: "grape",  y: 28  }
+;    ]
+;  }]
+;});
+;//Render Chart
+;chart.render();
+
+
 (ns gl-playground.core
   (:require
     [reagent.core :as r]
-    ;[clojure.java.io :as io]
-    [reagent.dom :as rd]
-    [clojure.edn :as edn]
-    ["react-vis" :as rvis]))
-
-;(def chart-data [{:x 1 :y 1}
-;                 {:x 2 :y 2}
-;                 {:x 3 :y 4}
-;                 {:x 4 :y 5}
-;                 {:x 5 :y 4}
-;                 {:x 6 :y 6}
-;                 {:x 7 :y 8}
-;                 {:x 8 :y 6}
-;                 {:x 9 :y 5}
-;                 {:x 10 :y 5}])
-
-(defn generate-chart-data []
-  (let [num-entries 10000
-        max-value 100]
-    (vec (repeatedly num-entries
-                     (fn []
-                       {:x (rand-int (inc max-value))
-                        :y (rand-int (inc max-value))})))))
+    ;["react" :as react]
+    ["@canvasjs/react-charts" :as CJS]
+    ;["react-apexcharts" :refer (Chart)]
+    [reagent.dom :as rd]))
 
 ;(def chart-data
-;  (generate-chart-data))
+;  {:title {:text "Basic Column Chart in ClojureScript"}
+;   :data [{:type "column"
+;           :dataPoints [{:label "apple"  :y 10}
+;                        {:label "orange" :y 15}
+;                        {:label "banana" :y 25}
+;                        {:label "mango"  :y 30}
+;                        {:label "grape"  :y 28}]}]})
 
-
-
-(def axis-style {:line {:stroke "#333"
-                        :strokeLinecap "square"}
-                 :ticks {:stroke "#999"}
-                 :text {:stroke "none"
-                        :fill "#333"}})
-
-(defn line-chart [data]
-  [:> rvis/XYPlot
-   {:width 800
-    :height 225
-    :margin {:left 50 :right 50}}
-   [:> rvis/XAxis
-    {:tickTotal 10
-     :tickSizeInner 0
-     :tickSizeOuter 3
-     :style axis-style}]
-   [:> rvis/YAxis
-    {:tickSizeInner 0
-     :tickSizeOuter 3
-     :style axis-style}]
-   [:> rvis/LineSeries
-    {:data data
-     :color "#e47320"
-     :strokeWidth 1
-     :style {:fill "none"
-             :strokeLinejoin "round"
-             :strokeLinecap "round"}}]])
-
-(def chart-data (vec (for [i (range 1 100)]
-                       {:x i
-                        :y (* 2 i)})))
-
-(print chart-data)
-
-(def chart-data (generate-chart-data))
-
-(js/localStorage.setItem "chart-data" (pr-str chart-data))
-
-(def read-data (edn/read-string (js/localStorage.getItem "chart-data")))
-
-;(spit "chart-data.txt" (pr-str (generate-chart-data)))
+;(def CanvasJS (CanvasJSReact/CanvasJS ))
+(def CanvasJSChart (.CanvasJSChart CJS/CanvasJSReact))
 ;
-;(def chart-data-from-file (edn/read-string (slurp "chart-data.txt")))
+;(def options
+;  {:chart {:id "basic-bar"}
+;   :xaxis {:categories [1991 1992 1993 1994 1995 1996 1997 1998 1999]}})
 
+(def series
+  [{:name "series-1"
+    :data [30 40 45 50 49 60 70 91]}])
+(def options {:zoomEnabled true
+         :animationEnabled true
+         :title {:text "Try Zooming - Panning"}
+         :data [{:x 1 :y 2}]})
 
 (defn app-scaffold []
-  [:div
-   [line-chart read-data]])
+  [:div {:id "chartContainer"}
+   (print CJS/CanvasJSReact)
+   ;[:> Chart {:options options :series series :type "line" :width 500}]
+   [:> CanvasJSChart {:options options}]
+   ])
 
 (defn ^:dev/after-load-async mount-components
   "mount the main UI components using Reagent"
