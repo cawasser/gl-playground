@@ -1,118 +1,112 @@
-;(ns gl-playground.core
-;  (:require
-;    [reagent.core :as r]
-;    [reagent.dom :as rd]
-;    [re-frame.core :as rf]
-;    [re-com.core :as rc]
-;    ["recharts" :refer [LineChart Line Brush
-;                        XAxis YAxis ZAxis Tooltip]]))
-;
-;;const data = [{name: 'Page A', uv: 400, pv: 2400, amt: 2400}, ...];
-;(def data [{:name "page-1" :fill "#ffffff" :uv 4000 :pv 2400 :amt 2400}])
-;
-;
-;;(def source-code '[:> LineChart {:data d}
-;;                   (utils/standard-chart-components component-id {})
-;;                   [:> Line (merge {:type              "monotone" :dataKey a
-;;                                    :isAnimationActive @isAnimationActive?
-;;                                    :stroke            (ui-utils/resolve-sub subscriptions [a :stroke])
-;;                                    :fill              (ui-utils/resolve-sub subscriptions [a :fill])}
-;;                                   (when (seq (ui-utils/resolve-sub subscriptions [a :stackId]))
-;;                                     {:stackId (ui-utils/resolve-sub subscriptions [a :stackId])}))]])
-;(defn page []
-;  ;(r/as-element
-;    [:p "test"]
-;  ;  [:> LineChart {:width 400 :height 400 :data data}
-;     ;[:> Line {:type "monotone" :stroke "#8884d8"}]
-;     ;]
-;    )
-;   ;)
-;
-;
-;(defn ^:dev/after-load-async mount-components
-;  "mount the main UI components using Reagent"
-;  []
-;  (let [root-el (.getElementById js/document "app")]
-;    (rd/unmount-component-at-node root-el)
-;    (rd/render [page] root-el)))
-;
-;
-;(defn main []
-;  (mount-components))
-
-
-
-
-
-;(def chart (new js/CanvasJS.Chart "" {}))
-;(def chart (js/CanvasJS.Chart. "chartContainer" (clj->js chart-data)))
-
-
-
-
-;(defn render-chart []
-;  (let [chart (-> (CanvasJS.Chart. "container" (clj->js chart-data))
-;                  (.render))]
-;    chart))
-
-; var chart = new CanvasJS.Chart("container", {
-;  //Chart Options - Check https://canvasjs.com/docs/charts/chart-options/
-;  title:{
-;    text: "Basic Column Chart in JavaScript"
-;  },
-;  data: [{
-;    type: "column",
-;    dataPoints: [
-;      { label: "apple",  y: 10  },
-;      { label: "orange", y: 15  },
-;      { label: "banana", y: 25  },
-;      { label: "mango",  y: 30  },
-;      { label: "grape",  y: 28  }
-;    ]
-;  }]
-;});
-;//Render Chart
-;chart.render();
-
-
 (ns gl-playground.core
   (:require
     [reagent.core :as r]
     ;["react" :as react]
-    ["@canvasjs/react-charts" :as CJS]
-    ;["react-apexcharts" :refer (Chart)]
-    [reagent.dom :as rd]))
+    ["@canvasjs/react-charts$default" :as CanvasJSReact]
+    ["react-apexcharts$default" :as ReactApexCharts]
+    ["react-chartjs-2" :refer (Line)]
+    ["anychart-react" :as AnyChart]
+    ["highcharts$default" :as HighCharts]
+    ["highcharts-react-official$default" :as HighChartsReact]
+    ["recharts" :refer [ResponsiveContainer LineChart Line Brush]]
+    [reagent-table.core :as rt]
+    [reagent.dom :as rd]
+    [gl-playground.react-table :as rtable]))
 
-;(def chart-data
-;  {:title {:text "Basic Column Chart in ClojureScript"}
-;   :data [{:type "column"
-;           :dataPoints [{:label "apple"  :y 10}
-;                        {:label "orange" :y 15}
-;                        {:label "banana" :y 25}
-;                        {:label "mango"  :y 30}
-;                        {:label "grape"  :y 28}]}]})
+(defn generate-chart-data [num-entries max-value]
+  (let [num-entries num-entries
+        max-value max-value]
+    (vec (repeatedly num-entries
+                     (fn []
+                       {:x (rand-int (inc max-value))
+                        :y (rand-int (inc max-value))})))))
 
-;(def CanvasJS (CanvasJSReact/CanvasJS ))
-(def CanvasJSChart (.CanvasJSChart CJS/CanvasJSReact))
-;
-;(def options
-;  {:chart {:id "basic-bar"}
-;   :xaxis {:categories [1991 1992 1993 1994 1995 1996 1997 1998 1999]}})
+(defn table []
+  (let [table-data {:headers ["1" "2" "3" "4"]
+                         :rows [["A"]]}
+        tdata (r/atom table-data)]
 
-(def series
-  [{:name "series-1"
-    :data [30 40 45 50 49 60 70 91]}])
-(def options {:zoomEnabled true
-         :animationEnabled true
-         :title {:text "Try Zooming - Panning"}
-         :data [{:x 1 :y 2}]})
+    [rt/reagent-table tdata]))
+(defn canvas-js-chart [type theme title x-axis-title y-axis-title line-size init-data]
+
+  (let [CanvasJSChart (.-CanvasJSChart CanvasJSReact)
+        data (r/atom init-data)
+        options {:zoomEnabled true
+                 :animationEnabled true
+                 :theme theme
+                 :title {:text title}
+                 :axisX {:title x-axis-title}
+                 :axisY {:title y-axis-title}
+                 :data [{:type type
+                         :markerSize line-size
+                         :dataPoints @data
+                         }]}]
+
+    ;(js/setInterval #(swap! data conj [{:x 1 :y 1}]) 1000)
+    ;
+    (let [interval-id (js/setInterval #(swap! data conj [{:x 3 :y 4}]) 1000)]
+      (fn []
+        (js/clearInterval interval-id)))
+
+    [:> CanvasJSChart {:options options}]))
+
+(defn react-apex-chart [type data-title width height init-data]
+  (let [data (r/atom init-data)
+        options {
+         :chart {
+           :id "basic-bar"}
+         :xaxis {
+           :type "numeric"}}
+        series [{
+            :name data-title
+            :data @data}]]
+
+  [:> ReactApexCharts {:options options :series series :type type :width width :height height}]))
+
+(defn any-chart []
+  (let [chart (js/anychart.pie)
+     data [["Chocolate" 5]
+           ["Rhubarb compote" 2]
+           ["Crêpe Suzette" 2]
+           ["American blueberry" 2]
+           ["Buttermilk" 1]]]
+    (doto chart
+    (.data chart data)
+    (.title chart "Top 5 pancake fillings")
+    (.container chart "app")
+    (.draw))
+    ;(print AnyChart.line)
+  ;[:> chart {:type "pie" :data [1, 2, 3, 4] :title "Any Chart"}]
+  ))
+
+(defn high-chart []
+  (let [options {:title {:text "My chart"}
+                 :series [{:data [1 2 3]}]}]
+
+
+  [:> HighChartsReact {:highcharts HighCharts :options options}]
+  ))
+
+(defn table []
+  (rtable/table-component {} rtable/tabular-data))
 
 (defn app-scaffold []
+  (let [init-data (generate-chart-data 350 1000)]
   [:div {:id "chartContainer"}
-   (print CJS/CanvasJSReact)
-   ;[:> Chart {:options options :series series :type "line" :width 500}]
-   [:> CanvasJSChart {:options options}]
-   ])
+
+     (canvas-js-chart "line" "light1" "Line chart in ClojureScript" "X-Axis" "Y-Axis" 1 (sort-by :x init-data))
+     ;(react-apex-chart "line" "Satellite data" 1000 500 (generate-chart-data 32000 1000))
+     ;(react-chart-js (generate-chart-data 10 10))
+     ;(any-chart)
+     ;[any-chart]
+     ;(high-chart)
+   [table]
+   ]
+
+
+
+   ;]
+))
 
 (defn ^:dev/after-load-async mount-components
   "mount the main UI components using Reagent"
