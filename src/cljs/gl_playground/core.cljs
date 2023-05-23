@@ -27,10 +27,11 @@
         tdata (r/atom table-data)]
 
     [rt/reagent-table tdata]))
-(defn canvas-js-chart [type theme title x-axis-title y-axis-title line-size init-data]
+(defn canvas-js-chart [type theme title x-axis-title y-axis-title line-size init-data1 init-data2]
 
   (let [CanvasJSChart (.-CanvasJSChart CanvasJSReact)
-        data (r/atom init-data)
+        data1 (r/atom init-data1)
+        data2 (r/atom init-data2)
         options {:zoomEnabled true
                  :animationEnabled true
                  :theme theme
@@ -39,12 +40,16 @@
                  :axisY {:title y-axis-title}
                  :data [{:type type
                          :markerSize line-size
-                         :dataPoints @data
+                         :dataPoints @data1
+                         }
+                        {:type type
+                         :markerSize line-size
+                         :dataPoints @data2
                          }]}]
 
     ;(js/setInterval #(swap! data conj [{:x 1 :y 1}]) 1000)
     ;
-    (let [interval-id (js/setInterval #(swap! data conj [{:x 3 :y 4}]) 1000)]
+    (let [interval-id (js/setInterval #(swap! data1 conj [{:x 3 :y 4}]) 1000)]
       (fn []
         (js/clearInterval interval-id)))
 
@@ -91,10 +96,11 @@
   (rtable/table-component {} rtable/tabular-data))
 
 (defn app-scaffold []
-  (let [init-data (generate-chart-data 350 1000)]
+  (let [init-data1 (generate-chart-data 350 1000)
+        init-data2 (generate-chart-data 350 1000)]
   [:div {:id "chartContainer"}
 
-     (canvas-js-chart "line" "light1" "Line chart in ClojureScript" "X-Axis" "Y-Axis" 1 (sort-by :x init-data))
+     (canvas-js-chart "line" "light1" "NCR2A" "MHz" "dBm" 1 (sort-by :x init-data1) (sort-by :x init-data2))
      ;(react-apex-chart "line" "Satellite data" 1000 500 (generate-chart-data 32000 1000))
      ;(react-chart-js (generate-chart-data 10 10))
      ;(any-chart)
