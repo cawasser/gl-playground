@@ -98,7 +98,7 @@
   (rtable/table-component {} rtable/tabular-data))
 
 (defn app-scaffold []
-  (let [num-data-points 32000
+  (let [num-data-points 8000
         init-data1 (generate-chart-data num-data-points 1000)
         init-data2 (generate-chart-data num-data-points 1000)
         ;start-time (System/currentTimeMillis)
@@ -106,6 +106,10 @@
   [:div {:id "chartContainer"}
     [:div
      [:p "Datapoints: " (str (* num-data-points 2))]]
+   (time (canvas-js-chart "line" "light1" "NCR2A" "MHz" "dBm" 1 (sort-by :x init-data1) (sort-by :x init-data2)))
+   (time (canvas-js-chart "line" "light1" "NCR2A" "MHz" "dBm" 1 (sort-by :x init-data1) (sort-by :x init-data2)))
+   (time (canvas-js-chart "line" "light1" "NCR2A" "MHz" "dBm" 1 (sort-by :x init-data1) (sort-by :x init-data2)))
+   (time (canvas-js-chart "line" "light1" "NCR2A" "MHz" "dBm" 1 (sort-by :x init-data1) (sort-by :x init-data2)))
    (time (canvas-js-chart "line" "light1" "NCR2A" "MHz" "dBm" 1 (sort-by :x init-data1) (sort-by :x init-data2)))
 
      ;(react-apex-chart "line" "Satellite data" 1000 500 (generate-chart-data 32000 1000))
