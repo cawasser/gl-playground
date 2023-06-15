@@ -48,11 +48,6 @@
 
 
 
-(def initialNodes [
-                   ;{:id "100", :position {:x 100, :y 100}, :data {:label "1"}}
-                   ;{:id "200", :position {:x 100, :y 200}, :data {:label "2"}}
-                   {:id "300", :type ":ui/component" :position {:x 200, :y 300}, :data {:label ":ui/bar-chart" :kind ":ui/bar-chart"}}])
-
 (def initialEdges [{:id            "e1-2", :source "200", :target "300"
                     :style         {:strokeWidth 1 :stroke :yellow}
                     :arrowHeadType "arrowclosed"}])
@@ -70,44 +65,6 @@
    :grid-layout [{:i :ui/line-chart :x 0 :y 0 :w 10 :h 11 :static true}
                  {:i :ui/bar-chart :x 10 :y 0 :w 10 :h 11 :static true}]})
 
-(comment
-
-  initial-dsl
-  (first initialNodes)
-  (def comp :components initial-dsl))
-
-  {:id 1, :type  :position {:x 200, :y 300}, :data {:label ":ui/table" :kind ":ui/table"}}
-
-  (def node (first initialNodes))
-
-  (=
-
-    (assoc nil :components (into {} (map (fn [node]
-                                           {(keyword (edn/read-string (get-in node [:data :kind]))) {:type (edn/read-string (:type node)),
-                                                                                                     :name (edn/read-string (get-in node [:data :label])) , :config-data []}}) initialNodes)))
-
-    {:components {:ui/table     {:type :ui/component :name :ui/table :config-data []}
-                  :ui/bar-chart {:type :ui/component :name :ui/bar-chart :config-data []}}}
-
-    )
-
-  (assoc nil :key/mine "test")
-
-  {:key/mine "test"}
-
-
-
-  {:components {(cljs.reader/read-string (get-in node [:data :kind])) {:type (cljs.reader/read-string (:type node)), :name (cljs.reader/read-string (get-in node [:data :label])) , :config-data []},
-                :ui/line-chart {:type :ui/component, :name :rechart/line, :config-data []},
-                :topic/data {:type :source/local, :name :topic/data}}
-
-
-
-   :links       {:topic/data {:data {:ui/bar-chart  :data
-                                     :ui/line-chart :data}}}
-   :grid-layout [{:i (cljs.reader/read-string (get-in node [:data :kind])), :x (get-in node [:position :x]), :y (get-in node [:position :y]), :w 10, :h 11, :static true}
-                 {:i :ui/bar-chart, :x 10, :y 0, :w 10, :h 11, :static true}]}
-  )
 
 (def initial-dsl2
   {:components  (reduce #(assoc %1 (:id %2) (:data %2))
@@ -149,28 +106,6 @@
                    :arrowHeadType arrowHeadType}))]
 
     (r/atom {:nodes nodes :edges edges})))
-
-
-;(defn react-flow->dsl [dsl-atom data]
-;  (swap! dsl-atom merge
-;         {:components (reduce (fn [acc [id component]]
-;                                (assoc acc id
-;                                           {:type :ui/component
-;                                            :name (-> component :data :kind)
-;                                            :config-data []}))
-;                              {}
-;                              (:nodes data))
-;          :links (reduce (fn [acc {source target}]
-;                           (update-in acc [:links source :data target] keyword))
-;                         {}
-;                         (:edges data))
-;          :grid-layout (reduce (fn [acc {id :id x :position/y y :position/x w :style/width h :style/height}]
-;                                 (conj acc
-;                                       {:i id :x x :y y :w w :h h :static true}))
-;                               []
-;                               (:nodes data))}))
-
-
 
 
 (defn page []
@@ -215,38 +150,3 @@
 
 
 
-(comment
-  [:> FlexLayout]
-
-  [:> FlexLayout {:model   {}
-                  :factory component-factory}]
-
-  [:p "testing"]
-
-  (def model (.fromJson Model (clj->js layout)))
-
-
-  (r/reactify-component
-    [:button name])
-
-  (wr/widget-for "form")
-
-  (clj->js {:text "some text"})
-  (pr-str {:text "some text"})
-  (-> {:text "some text"}
-      pr-str
-      edn/read-string)
-  (js->clj {"text" "some text"})
-  ())
-
-
-(comment
-
-  @data
-
-  (-> @data :nodes count)
-  (-> @data :edges count)
-
-  @re-frame.db/app-db
-
-  ())
