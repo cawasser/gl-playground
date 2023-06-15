@@ -15,8 +15,8 @@
                          :width "100%"
                          :height "100%"
                          :borderRadius "5px" :margin :auto
-                         :background   :white :color :black
-                         })
+                         :background   :white :color :black})
+
 
 
 (defn- open-details [open-details? node]
@@ -28,30 +28,31 @@
               :type          t
               :position      position
               :style         style
-              ;:onConnect     #(js/console.log "handle onConnect" %)
+              ;:onConnect     #(js/console.log "SOURCE handle onConnect" %)
               :isConnectable isConnectable}])
+
 
 (defn- make-handle [direction {:keys [label style position]}]
   ^{:key label} [handle label direction style position true])
 
 
-(def ui-component-registry {":ui/table" {:inputs ["data-in" "config-in"] :outputs ["data-out" "config-out" "selection"]}})
-
-
 (def ui-component-registry-almost {":ui/table"  {:inputs  [{:label "data-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
                                                            {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
-                                                 :outputs [{:label "data-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}
-                                                           {:label "config-out" :style {:bottom 20 :top "auto" :background "#555"} :position (.-Right Position)}]}
+                                                 :outputs [{:label "data-out" :style {:top 10 :background "#999"} :position (.-Right Position)}
+                                                           {:label "config-out" :style {:top 20 :background "#999"} :position (.-Right Position)}]}
+
+                                   ":ui/bar-chart"  {:inputs  [{:label "data-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
+                                                               {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
+                                                     :outputs [{:label "data-out" :style {:top 10 :background "#999"} :position (.-Right Position)}
+                                                               {:label "config-out" :style {:top 20 :background "#999"} :position (.-Right Position)}]}
 
                                    ":ui/slider" {:inputs  [{:label "position-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
                                                            {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
-                                                 :outputs [{:label "position-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}]}})
+                                                 :outputs [{:label "position-out" :style {:top 10 :background "#999"} :position (.-Right Position)}]}
 
-(def get-input-output {:inputs  [{:label "data-in" :style {:top 10 :background "#555"} :position (.-Left Position)}
-                                 {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}
-                                 {:label "position-in" :style {:top 10 :background "#555"} :position (.-Left Position)}]
-                       :outputs [{:label "data-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}
-                                 {:label "config-out" :style {:bottom 20 :top "auto" :background "#555"} :position (.-Right Position)}]})
+                                   ":source/remote" {:inputs  [{:label "data-in" :style {:background "#555"} :position (.-Left Position)}]
+                                                     :outputs [{:label "data-out" :style {:background "#999"} :position (.-Right Position)}]}})
+
 
 (defn look-up-ui-component [ui-name]
   (get ui-component-registry-almost ui-name))
@@ -65,6 +66,18 @@
                                {:label "config-in" :style {:top 20 :background "#555"} :position (.-Left Position)}]
                      :outputs [{:label "data-out" :style {:bottom 20 :top "auto" :background "#555"} :position (.-Right Position)}
                                {:label "config-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}]})
+
+
+(defn node-data [node-type node-id node-kind position]
+  (log/info "node-data" node-type node-id node-kind position)
+
+  {:id       node-id
+   :type     node-type
+   :data     {:label   node-id
+              :kind    node-kind
+              :inputs  (:inputs (get ui-component-registry-almost node-kind))
+              :outputs (:outputs (get ui-component-registry-almost node-kind))}
+   :position position})
 
 
 (defn custom-node
@@ -83,37 +96,21 @@
         style (merge default-node-style (node-type node-style))
         [isVisible set-visibility on-change-visibility] (useNodesState false)]
 
-   ; (log/info "custom-node" label node-type kind-of-element "///" data "///" inputs "///" outputs "//" extras?)
+    ;(log/info "custom-node" label node-type kind-of-element "///" data "///" inputs "///" outputs "//" extras?)
 
     (r/as-element
 
       [:div {:style style :on-mouse-enter #(set-visibility true) :on-mouse-leave #(set-visibility false)}
 
-       [:> NodeToolbar {
+       [:> NodeResizer {:color "#000000" :isVisible isVisible :minWidth 100 :minHeight 30}]
 
-                        :position (.-Top Position)}
-        [:select {:name "kind" :on-change
-                  #(update-node-kind-fn (-> % (.-target) (.-value)) node-id)}
-         [:optgroup {:label "Sub Type"}
-          [:option {:value ":ui/table"} "ui/table"]
-          [:option {:value ":ui/slider"} "ui/slider"]]]]
-       [:> NodeResizer {:color "#000000"
-                        :isVisible isVisible
-                        :minWidth 100 :minHeight 30}]
        (map #(make-handle "target" %) (:inputs (look-up-ui-component @kind-of-element)))
        [:div {
               :style    (merge {:textAlign :center} style)
               :on-click #(open-details open-details? node)}
 
         label]
-       ;[:input.nodrag {:type "color"}]
-       ;[:input.input.nodrag {:type "text" :style {:width "75px"}}]
-       (map #(make-handle "target" %) (:outputs (look-up-ui-component @kind-of-element)))])))
+       (map #(make-handle "source" %) (:outputs (look-up-ui-component @kind-of-element)))])))
 
 
-(comment
-  (def kind-of-element ":ui/table")
-
-
-  ())
 

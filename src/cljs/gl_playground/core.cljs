@@ -4,17 +4,16 @@
     [reagent.dom :as rd]
     [re-frame.core :as rf]
     [re-com.core :as rc]
-    [cljs.tools.reader.edn :as edn]
-    ["reactflow" :refer (ReactFlowProvider
-                          Handle Position)]
+    ["reactflow" :refer (ReactFlowProvider Handle Position)]
     [taoensso.timbre :as log]
-    [gl-playground.widget.registry :as wr]
-    [gl-playground.widget.just-a-button]
-    [gl-playground.widget.simple-form]
+    ;[gl-playground.widget.just-a-button]
+    ;[gl-playground.widget.simple-form]
     [gl-playground.bh.atom.diagram.editable-diagram :as diagram]
-    [gl-playground.bh.atom.diagram.editable-diagram-rccst :as diagram-r]))
-;[gl-playground.bh.atom.diagram.CustomNodes.EditableNode :as EditableNode]
+    [gl-playground.bh.atom.diagram.editable-diagram-rccst :as diagram-r]
 
+    [gl-playground.bh.atom.diagram.custom-nodes.custom-node :as cn]
+    [gl-playground.bh.atom.diagram.custom-nodes.editable-node :as e]
+    [gl-playground.bh.atom.diagram.custom-nodes.color-picker-node :as cp]))
 
 
 (def layout
@@ -37,46 +36,53 @@
                                     :component "form"
                                     :config    {:text "some text"}}]}]}})
 
-(defn editableNode []
-  [:<>])
-;[Handle {:type "target"
-;            :isConnectable true}]
-;[:input {:type "text"}]
-;[Handle {:type "source"
-;            :isConnectable true}]
+(def node-types {":ui/component"  (partial cn/custom-node :ui/component)
+                 ":source/remote" (partial cn/custom-node :source/remote)
+                 "color-picker"   (partial cp/color-picker-node :source/local)
+                 "editable-node"  (partial e/editableNode :source/fn)})
+(def bootstrap-node-data {":ui/component"  cn/node-data
+                          ":source/remote" cn/node-data})
 
 
+(defn default-node-kind [node-type]
+  (condp = node-type
+    ":ui/component" ":ui/table"
+    ":source/remote" ":source/remote"
+    :else "unknown"))
 
 
-(def initialEdges [{:id            "e1-2", :source "200", :target "300"
-                    :style         {:strokeWidth 1 :stroke :yellow}
-                    :arrowHeadType "arrowclosed"}])
-(def initialNodes [{:id "200", :type ":ui/component" :position {:x 200, :y 300}, :data {:label ":ui/table" :kind ":ui/table"}}
-                   {:id "300", :type ":ui/component" :position {:x 300, :y 400}, :data {:label ":ui/bar-chart" :kind ":ui/bar-chart"}}])
+(def initialEdges [{:id     "e1-2",
+                    :source "100", :sourceHandle "data-out"
+                    :target "200" :targetHandle "data-in"
+                    :style  {:strokeWidth 1 :stroke :blue} :arrowHeadType "arrowclosed"}
+                   {:id     "e1-3",
+                    :source "100", :sourceHandle "data-out"
+                    :target "300" :targetHandle "data-in"
+                    :style  {:strokeWidth 1 :stroke :blue} :arrowHeadType "arrowclosed"}])
+(def initialNodes [{:id "100", :type ":source/remote" :position {:x 100, :y 100}, :data {:label "data-source" :kind ":source/remote"}}
+                   {:id "200", :type ":ui/component" :position {:x 200, :y 150}, :data {:label "table" :kind ":ui/table"}}
+                   {:id "300", :type ":ui/component" :position {:x 300, :y 200}, :data {:label "bar-chart" :kind ":ui/bar-chart"}}])
+
 (def initial-dsl
-
-  {:components  {:ui/bar-chart  {:type        :ui/component :name :rechart/bar
-                                 :config-data []}
-                 :ui/line-chart {:type        :ui/component :name :rechart/line
-                                 :config-data []}
-                 :topic/data    {:type :source/local :name :topic/data}}
-   :links       {:topic/data {:data {:ui/bar-chart  :data
-                                     :ui/line-chart :data}}}
+  {:components  {":ui/bar-chart"  {:type        :ui/component :name :rechart/bar
+                                   :config-data []}
+                 ":ui/line-chart" {:type        :ui/component :name :rechart/line
+                                   :config-data []}
+                 ":topic/data"    {:type :source/local :name :topic/data}}
+   :links       {":topic/data" {:data-out {":ui/bar-chart"  :data
+                                           ":ui/line-chart" :data}}}
    :grid-layout [{:i :ui/line-chart :x 0 :y 0 :w 10 :h 11 :static true}
                  {:i :ui/bar-chart :x 10 :y 0 :w 10 :h 11 :static true}]})
-
-
 (def initial-dsl2
   {:components  (reduce #(assoc %1 (:id %2) (:data %2))
-                        {}
-                        initialNodes)
+                  {}
+                  initialNodes)
    :links       (reduce #(assoc-in %1 [:topic/data :data (:type %2)]
-                                   (:id %2))
-                        {}
-                        initialEdges)
+                           (:id %2))
+                  {}
+                  initialEdges)
    :grid-layout [{:i :ui/line-chart :x 0 :y 0 :w 10 :h 11 :static true}
                  {:i :ui/bar-chart :x 10 :y 0 :w 10 :h 11 :static true}]})
-
 
 
 (defn react-flow->dsl [dsl-atom data]
@@ -85,23 +91,25 @@
 
 
 (defn- dsl->react-flow [the-dsl]
-  (let [components (get the-dsl :components)
-        links (get the-dsl :links)
-        layout (get the-dsl :grid-layout)
-        nodes (for [node initialNodes]
+  (let [nodes (for [node initialNodes]
                 (let [{:keys [type position data]} node
-                      kind (get data :kind)
+                      kind  (get data :kind)
                       label (get data :label)]
                   {:id       (str "node-" (:id node))
-                   :type     (keyword type)
+                   :type     type
                    :position position
                    :data     {:label label :kind kind}}))
+
         edges (for [edge initialEdges]
-                (let [{:keys [id source target style arrowHeadType]} edge]
+                (let [{:keys [id
+                              source sourceHandle
+                              target targetHandle
+                              style arrowHeadType]} edge]
                   {:id            (str "edge-" id)
                    :source        (str "node-" source)
+                   :sourceHandle  sourceHandle
                    :target        (str "node-" target)
-                   :animated      true
+                   :targetHandle  targetHandle
                    :style         style
                    :arrowHeadType arrowHeadType}))]
 
@@ -110,9 +118,7 @@
 
 (defn page []
   (let [the-dsl-as-an-atom (atom initial-dsl)
-        text-value (r/atom "Type Here")
-        open-details? (r/atom {})
-        data (dsl->react-flow @the-dsl-as-an-atom)]
+        data               (dsl->react-flow @the-dsl-as-an-atom)]
 
     [:div {:style {:width "800vw" :height "800vh"}}
      [rc/h-box
@@ -124,16 +130,15 @@
                                      [diagram/make-draggable-node ":source/remote" ":source/remote" :source/remote]
                                      [diagram/make-draggable-node "Color Picker" "color-picker" :source/local]
                                      [diagram/make-draggable-node "Editable" "editable-node" :source/fn]]]]
-                 [rc/box
-                  :size "auto"
-                  :child [diagram-r/editable-diagram
-                          :data data
-                          :update-fn #(partial react-flow->dsl the-dsl-as-an-atom)
-                          :component-id "editable-diagram-rccst"
-                          :node-types diagram-r/node-types
-                          :controls true
-                          :mini-map true
-                          :background true]]]]]))
+                 [diagram-r/component
+                  :data data
+                  :component-id "editable-diagram"
+                  :node-types node-types
+                  :node-data bootstrap-node-data
+                  :node-kind-fn default-node-kind
+                  :controls true
+                  :mini-map true
+                  :background true]]]]))
 
 
 (defn ^:dev/after-load-async mount-components
