@@ -10,7 +10,8 @@
     [:div
      [:h2 "A Simple Form"]
      [:p (get c "text")]
-     [:button {:on-click #(log/info "Clicked Submit")} "Submit!"]]))
+     [:button {:on-click #(log/info "Clicked Submit")} "Submit!"]
+     [:button {:on-click #(log/info "Clicked Cancel")} "Cancel"]]))
 
 (wr/add-widget "form" #'widget)
 

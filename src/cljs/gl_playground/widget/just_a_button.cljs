@@ -9,6 +9,7 @@
   (let [c (js->clj config)
         label (get c "label")]
     [:div
-     [:button {:on-click #(log/info "Clicked" label)} label]]))
+     [:button {:on-click #(log/info "Clicked" label)} label]
+     [:button.is-primary {:on-click #(log/info "Clicked" "the primary button")} "Primary"]]))
 
 (wr/add-widget "button" #'widget)
