@@ -165,8 +165,8 @@
     (def node-type ":ui/component")
     (def new-id (str node-type "-" (swap! next-id inc)))
     (def position (clj->js {:x 10 :y 10}))
-    (def node-data {":ui/component"  cn/node-data
-                    ":source/remote" cn/node-data}))
+    (def node-data {":ui/component"  cn/new-node
+                    ":source/remote" cn/new-node}))
 
 
   ())
@@ -267,7 +267,7 @@
         wrapper (clojure.core/atom nil)]
 
     [:> ReactFlowProvider
-     [:div#wrapper {:style {:width "800px" :height "700px"}
+     [:div#wrapper {:style {:width "600px" :height "700px"}
                     :ref   (fn [el] (reset! wrapper el))}
       [diagram*
        :component-id component-id

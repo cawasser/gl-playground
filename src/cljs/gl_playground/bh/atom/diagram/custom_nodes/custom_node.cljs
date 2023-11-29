@@ -26,6 +26,7 @@
 
 
 (defn- handle [id t style position isConnectable]
+  (log/info "handle" id t style)
   [:> Handle {:id            id
               :type          t
               :position      position
@@ -71,8 +72,8 @@
                                {:label "config-out" :style {:bottom 10 :top "auto" :background "#555"} :position (.-Right Position)}]})
 
 
-(defn node-data [node-type node-id node-kind position]
-  (log/info "node-data" node-type node-id node-kind position)
+(defn new-node [node-type node-id node-kind position]
+  (log/info "new-node" node-type node-id node-kind position)
 
   {:id       node-id
    :type     node-type

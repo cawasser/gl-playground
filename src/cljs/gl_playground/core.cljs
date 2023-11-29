@@ -40,8 +40,8 @@
                  ":source/remote" (partial cn/custom-node :source/remote)
                  "color-picker"   (partial cp/color-picker-node :source/local)
                  "editable-node"  (partial e/editableNode :source/fn)})
-(def bootstrap-node-data {":ui/component"  cn/node-data
-                          ":source/remote" cn/node-data})
+(def bootstrap-node-data {":ui/component"  cn/new-node
+                          ":source/remote" cn/new-node})
 
 
 (defn default-node-kind [node-type]
